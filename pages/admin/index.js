@@ -13,7 +13,7 @@ import SiteConfigManager from '../../components/admin/SiteConfigManager';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import { authenticateUser, createAuthSession, clearAuthSession } from '../../utils/auth';
-import { saveSiteConfig, saveProjects, saveContactInfo } from '../../utils/dataManager';
+import { saveSiteConfig, saveProjects } from '../../utils/dataManager';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -37,12 +37,10 @@ export default function AdminDashboard() {
     let success = false;
     
     try {
-      if (type === 'Site Configuration') {
+      if (type === 'Site Configuration' || type === 'Contact Information') {
         success = saveSiteConfig(data);
       } else if (type === 'Projects') {
         success = saveProjects(data);
-      } else if (type === 'Contact Information') {
-        success = saveContactInfo(data);
       }
       
       if (success) {
