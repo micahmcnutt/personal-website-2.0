@@ -12,6 +12,7 @@ import ContactManager from '../../components/admin/ContactManager';
 import SiteConfigManager from '../../components/admin/SiteConfigManager';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
+import { authenticateUser, createAuthSession, clearAuthSession } from '../../utils/auth';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -20,13 +21,14 @@ export default function AdminDashboard() {
   const [activeModule, setActiveModule] = useState('overview');
   const [lastSaved, setLastSaved] = useState(null);
 
-  // Simple password protection for demo purposes
+  // Authentication using centralized system
   const handleAuth = (e) => {
     e.preventDefault();
-    if (password === 'admin123') {
+    if (authenticateUser(password)) {
+      createAuthSession();
       setIsAuthenticated(true);
     } else {
-      alert('Invalid password. Use "admin123" for demo.');
+      alert('Invalid password. Please check your credentials.');
     }
   };
 
@@ -400,7 +402,7 @@ export default function AdminDashboard() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white bg-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                  placeholder="Password (use 'admin123' for demo)"
+                  placeholder="Enter admin password"
                 />
               </div>
 
@@ -448,7 +450,10 @@ export default function AdminDashboard() {
                   View Site
                 </Button>
                 <Button
-                  onClick={() => setIsAuthenticated(false)}
+                  onClick={() => {
+                    clearAuthSession();
+                    setIsAuthenticated(false);
+                  }}
                   variant="outline"
                 >
                   Sign Out

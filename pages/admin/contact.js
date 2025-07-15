@@ -3,19 +3,21 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Layout from '../../components/layout/Layout';
 import ContactManager from '../../components/admin/ContactManager';
+import { authenticateUser, createAuthSession, clearAuthSession } from '../../utils/auth';
 
 export default function ContactAdmin() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
 
-  // Simple password protection for demo purposes
+  // Authentication using centralized system
   const handleAuth = (e) => {
     e.preventDefault();
-    if (password === 'admin123') {
+    if (authenticateUser(password)) {
+      createAuthSession();
       setIsAuthenticated(true);
     } else {
-      alert('Invalid password');
+      alert('Invalid password. Please check your credentials.');
     }
   };
 
