@@ -47,7 +47,18 @@ export const saveSiteConfig = (config) => {
 
 // Projects Management
 export const getProjects = () => {
-  return getStoredData(STORAGE_KEYS.PROJECTS, defaultProjects);
+  try {
+    const projects = getStoredData(STORAGE_KEYS.PROJECTS, defaultProjects);
+    // Ensure we always return an array
+    if (!Array.isArray(projects)) {
+      console.warn('Projects data is not an array, returning default projects');
+      return Array.isArray(defaultProjects) ? defaultProjects : [];
+    }
+    return projects;
+  } catch (error) {
+    console.error('Error in getProjects:', error);
+    return Array.isArray(defaultProjects) ? defaultProjects : [];
+  }
 };
 
 export const saveProjects = (projects) => {
@@ -58,8 +69,17 @@ export const saveProjects = (projects) => {
 
 // Utility function to get featured projects
 export const getFeaturedProjects = () => {
-  const projects = getProjects();
-  return projects.filter(project => project.featured);
+  try {
+    const projects = getProjects();
+    if (!Array.isArray(projects)) {
+      console.warn('Projects is not an array in getFeaturedProjects');
+      return [];
+    }
+    return projects.filter(project => project && project.featured === true);
+  } catch (error) {
+    console.error('Error in getFeaturedProjects:', error);
+    return [];
+  }
 };
 
 // Utility function to reset all data to defaults

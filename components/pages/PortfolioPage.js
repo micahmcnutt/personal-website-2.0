@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ExternalLink, Github, Filter, Search, Eye, Star, Calendar, Code, Zap, X } from 'lucide-react';
+import { ExternalLink, Github, Filter, Search, Eye, Star, Calendar, Code, Zap, X, AlertCircle, RefreshCw } from 'lucide-react';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import { getProjects, getFeaturedProjects } from '../../utils/dataManager';
@@ -11,7 +11,9 @@ const PortfolioPage = () => {
   const [filteredProjects, setFilteredProjects] = useState([]);
   const [allProjects, setAllProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [showFeatured, setShowFeatured] = useState(false);
+  const [error, setError] = useState(null);
 
   const categories = [
     { id: 'all', name: 'All Projects', icon: Code },
@@ -23,21 +25,35 @@ const PortfolioPage = () => {
 
   // Load projects from data manager
   useEffect(() => {
-    try {
-      const loadedProjects = getProjects();
-      if (Array.isArray(loadedProjects)) {
-        setAllProjects(loadedProjects);
-        setFilteredProjects(loadedProjects);
-      } else {
-        console.error('Projects data is not an array:', loadedProjects);
+    const loadData = async () => {
+      try {
+        setIsInitialLoading(true);
+        setError(null);
+        
+        // Add small delay to prevent flash of loading state
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const loadedProjects = getProjects();
+        if (Array.isArray(loadedProjects)) {
+          setAllProjects(loadedProjects);
+          setFilteredProjects(loadedProjects);
+        } else {
+          console.error('Projects data is not an array:', loadedProjects);
+          setAllProjects([]);
+          setFilteredProjects([]);
+          setError('Invalid projects data format');
+        }
+      } catch (error) {
+        console.error('Error loading projects:', error);
         setAllProjects([]);
         setFilteredProjects([]);
+        setError('Failed to load projects');
+      } finally {
+        setIsInitialLoading(false);
       }
-    } catch (error) {
-      console.error('Error loading projects:', error);
-      setAllProjects([]);
-      setFilteredProjects([]);
-    }
+    };
+    
+    loadData();
   }, []);
 
   // Get all technologies from loaded projects
@@ -251,6 +267,66 @@ const PortfolioPage = () => {
     </Card>
     );
   };
+
+  // Show loading state during initial load
+  if (isInitialLoading) {
+    return (
+      <div className="py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+              My Portfolio
+            </h1>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+              A comprehensive showcase of my work, featuring web applications, mobile apps, 
+              backend systems, and development tools I've built.
+            </p>
+          </div>
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <span className="ml-3 text-gray-600 dark:text-gray-400">Loading projects...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+              My Portfolio
+            </h1>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+              A comprehensive showcase of my work, featuring web applications, mobile apps, 
+              backend systems, and development tools I've built.
+            </p>
+          </div>
+          <div className="text-center py-20">
+            <div className="text-red-500 mb-4">
+              <AlertCircle className="h-16 w-16 mx-auto mb-4" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Unable to load projects
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">
+              {error}
+            </p>
+            <Button
+              onClick={() => window.location.reload()}
+              variant="primary"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="py-16 px-4 sm:px-6 lg:px-8">
