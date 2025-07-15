@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { ExternalLink, Github, Filter, Search, Eye, Star, Calendar, Code, Zap, X } from 'lucide-react';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
-import { projects, getFeaturedProjects, getTechnologies } from '../../data/projects';
+import { getProjects, getFeaturedProjects } from '../../utils/dataManager';
 
 const PortfolioPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProject, setSelectedProject] = useState(null);
-  const [filteredProjects, setFilteredProjects] = useState(projects);
+  const [filteredProjects, setFilteredProjects] = useState([]);
+  const [allProjects, setAllProjects] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showFeatured, setShowFeatured] = useState(false);
 
@@ -20,13 +21,28 @@ const PortfolioPage = () => {
     { id: 'tools', name: 'Tools', icon: Star }
   ];
 
-  const allTechnologies = getTechnologies();
-  const featuredProjects = getFeaturedProjects();
+  // Load projects from data manager
+  useEffect(() => {
+    const loadedProjects = getProjects();
+    setAllProjects(loadedProjects);
+    setFilteredProjects(loadedProjects);
+  }, []);
+
+  // Get all technologies from loaded projects
+  const allTechnologies = allProjects.reduce((acc, project) => {
+    project.technologies.forEach(tech => {
+      if (!acc.includes(tech)) {
+        acc.push(tech);
+      }
+    });
+    return acc;
+  }, []);
+  const featuredProjects = allProjects.filter(project => project.featured);
 
   useEffect(() => {
     setIsLoading(true);
     const timer = setTimeout(() => {
-      let filtered = showFeatured ? featuredProjects : projects;
+      let filtered = showFeatured ? featuredProjects : allProjects;
       
       if (selectedCategory !== 'all') {
         filtered = filtered.filter(project => project.category === selectedCategory);
@@ -45,7 +61,7 @@ const PortfolioPage = () => {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [selectedCategory, searchTerm, showFeatured, featuredProjects]);
+  }, [selectedCategory, searchTerm, showFeatured, featuredProjects, allProjects]);
 
   const ProjectDetailModal = ({ project, onClose }) => {
     if (!project) return null;

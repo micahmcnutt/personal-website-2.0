@@ -6,8 +6,10 @@ import {
 } from 'lucide-react';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
+import { getSiteConfig } from '../../utils/dataManager';
 
 const ContactPage = () => {
+  const [siteConfig, setSiteConfig] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -23,6 +25,12 @@ const ContactPage = () => {
   const [submitStatus, setSubmitStatus] = useState(null);
   const [isOnline, setIsOnline] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Load site configuration
+  useEffect(() => {
+    const config = getSiteConfig();
+    setSiteConfig(config);
+  }, []);
 
   // Update current time every minute
   useEffect(() => {
@@ -113,29 +121,29 @@ const ContactPage = () => {
     {
       icon: Mail,
       label: 'Email',
-      value: 'micah.mcnutt@example.com',
-      href: 'mailto:micah.mcnutt@example.com',
+      value: siteConfig?.personal?.email || 'micah.mcnutt@example.com',
+      href: `mailto:${siteConfig?.personal?.email || 'micah.mcnutt@example.com'}`,
       description: 'Best for project inquiries'
     },
     {
       icon: Phone,
       label: 'Phone',
-      value: '+1 (555) 123-4567',
-      href: 'tel:+15551234567',
-      description: 'Available 9 AM - 6 PM EST'
+      value: siteConfig?.personal?.phone || '+1 (555) 123-4567',
+      href: `tel:${siteConfig?.personal?.phone?.replace(/\D/g, '') || '15551234567'}`,
+      description: siteConfig?.personal?.availability || 'Available 9 AM - 6 PM EST'
     },
     {
       icon: MapPin,
       label: 'Location',
-      value: 'Austin, TX',
+      value: siteConfig?.personal?.location || 'Austin, TX',
       href: null,
-      description: 'Central Time Zone'
+      description: siteConfig?.personal?.timezone || 'Central Time Zone'
     },
     {
       icon: MessageCircle,
       label: 'WhatsApp',
-      value: '+1 (555) 123-4567',
-      href: 'https://wa.me/15551234567',
+      value: siteConfig?.personal?.phone || '+1 (555) 123-4567',
+      href: `https://wa.me/${siteConfig?.personal?.phone?.replace(/\D/g, '') || '15551234567'}`,
       description: 'Quick messages'
     }
   ];
@@ -143,47 +151,47 @@ const ContactPage = () => {
   const socialLinks = [
     {
       name: 'GitHub',
-      href: 'https://github.com/yourusername',
+      href: siteConfig?.social?.github?.url || 'https://github.com/yourusername',
       icon: Github,
       color: 'hover:text-gray-900 dark:hover:text-white',
       description: 'Check out my code'
     },
     {
       name: 'LinkedIn',
-      href: 'https://linkedin.com/in/yourprofile',
+      href: siteConfig?.social?.linkedin?.url || 'https://linkedin.com/in/yourprofile',
       icon: Linkedin,
       color: 'hover:text-blue-600',
       description: 'Professional network'
     },
     {
       name: 'Twitter',
-      href: 'https://twitter.com/yourusername',
+      href: siteConfig?.social?.twitter?.url || 'https://twitter.com/yourusername',
       icon: Twitter,
       color: 'hover:text-blue-400',
       description: 'Latest updates'
     },
     {
       name: 'Instagram',
-      href: 'https://instagram.com/yourusername',
+      href: siteConfig?.social?.instagram?.url || 'https://instagram.com/yourusername',
       icon: Instagram,
       color: 'hover:text-pink-600',
       description: 'Behind the scenes'
     },
     {
       name: 'YouTube',
-      href: 'https://youtube.com/c/yourchannel',
+      href: siteConfig?.social?.youtube?.url || 'https://youtube.com/c/yourchannel',
       icon: Youtube,
       color: 'hover:text-red-600',
       description: 'Tech tutorials'
     },
     {
       name: 'Portfolio',
-      href: 'https://micahmcnutt.dev',
+      href: siteConfig?.social?.website?.url || 'https://micahmcnutt.dev',
       icon: Globe,
       color: 'hover:text-green-600',
       description: 'View my work'
     }
-  ];
+  ].filter(link => link.href && link.href !== '#');
 
   const projectTypes = [
     'Web Development',

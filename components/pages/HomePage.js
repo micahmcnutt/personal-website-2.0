@@ -2,29 +2,29 @@ import { useState, useEffect } from 'react';
 import { ArrowRight, Download, Code, Zap, Users, Award, Github, ExternalLink } from 'lucide-react';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
-import { getFeaturedProjects } from '../../data/projects';
+import { getSiteConfig, getFeaturedProjects } from '../../utils/dataManager';
 
 const HomePage = () => {
   const [featuredProjects, setFeaturedProjects] = useState([]);
+  const [siteConfig, setSiteConfig] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
   const [typedText, setTypedText] = useState('');
-  
-  const roles = [
-    'Full-Stack Developer',
-    'Problem Solver',
-    'Tech Enthusiast',
-    'UI/UX Designer'
-  ];
-  
   const [currentRole, setCurrentRole] = useState(0);
 
   useEffect(() => {
+    // Load data from localStorage or fallback to defaults
+    const config = getSiteConfig();
+    setSiteConfig(config);
     setFeaturedProjects(getFeaturedProjects());
     setIsVisible(true);
+  }, []);
+
+  useEffect(() => {
+    if (!siteConfig || !siteConfig.roles) return;
     
     // Typing animation for roles
     const typeRole = () => {
-      const role = roles[currentRole];
+      const role = siteConfig.roles[currentRole];
       let i = 0;
       const typingInterval = setInterval(() => {
         if (i < role.length) {
@@ -39,7 +39,7 @@ const HomePage = () => {
                 i--;
               } else {
                 clearInterval(erasingInterval);
-                setCurrentRole((prev) => (prev + 1) % roles.length);
+                setCurrentRole((prev) => (prev + 1) % siteConfig.roles.length);
               }
             }, 50);
           }, 2000);
@@ -52,14 +52,26 @@ const HomePage = () => {
     return () => clearInterval(roleInterval);
   }, [currentRole]);
 
-  const stats = [
-    { icon: Code, label: 'Projects Completed', value: '25+' },
-    { icon: Users, label: 'Happy Clients', value: '15+' },
-    { icon: Award, label: 'Years Experience', value: '3+' },
-    { icon: Zap, label: 'Technologies', value: '20+' }
+  // Get icon component from string name
+  const getIcon = (iconName) => {
+    const iconMap = {
+      'Code': Code,
+      'Users': Users,
+      'Award': Award,
+      'Zap': Zap
+    };
+    return iconMap[iconName] || Code;
+  };
+
+  // Use siteConfig data or fallback to defaults
+  const stats = siteConfig?.stats || [
+    { icon: 'Code', label: 'Projects Completed', value: '25+' },
+    { icon: 'Users', label: 'Happy Clients', value: '15+' },
+    { icon: 'Award', label: 'Years Experience', value: '3+' },
+    { icon: 'Zap', label: 'Technologies', value: '20+' }
   ];
 
-  const skills = [
+  const skills = siteConfig?.skills || [
     { name: 'Frontend Development', level: 90, color: 'bg-blue-500' },
     { name: 'Backend Development', level: 85, color: 'bg-green-500' },
     { name: 'UI/UX Design', level: 80, color: 'bg-purple-500' },
@@ -79,7 +91,7 @@ const HomePage = () => {
             </div>
             
             <h1 className="text-fluid-4xl lg:text-fluid-5xl font-bold text-primary mb-4 lg:mb-6 leading-tight">
-              Hi, I'm <span className="gradient-primary bg-clip-text text-transparent">Micah McNutt</span>
+              Hi, I'm <span className="gradient-primary bg-clip-text text-transparent">{siteConfig?.personal?.name || 'Micah McNutt'}</span>
             </h1>
             
             <div className="text-fluid-lg lg:text-fluid-xl text-secondary mb-6 lg:mb-8 h-10 lg:h-12 flex items-center justify-center mobile-center">
@@ -91,8 +103,7 @@ const HomePage = () => {
             </div>
             
             <p className="text-fluid-base lg:text-fluid-lg text-secondary mb-8 lg:mb-10 max-w-2xl lg:max-w-3xl mx-auto leading-relaxed mobile-padding">
-              Passionate about creating <span className="text-blue-600 dark:text-blue-400 font-semibold">innovative solutions</span> and 
-              building <span className="text-purple-600 dark:text-purple-400 font-semibold">beautiful user experiences</span> that make a difference.
+              {siteConfig?.personal?.bio || 'Passionate about creating innovative solutions and building beautiful user experiences that make a difference.'}
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 lg:gap-6 justify-center mb-8 lg:mb-12 mobile-stack">
@@ -109,7 +120,7 @@ const HomePage = () => {
             {/* Enhanced Stats Grid */}
             <div className="responsive-grid max-w-4xl mx-auto">
               {stats.map((stat, index) => {
-                const Icon = stat.icon;
+                const Icon = getIcon(stat.icon);
                 return (
                   <div
                     key={stat.label}

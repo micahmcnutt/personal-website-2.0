@@ -13,6 +13,7 @@ import SiteConfigManager from '../../components/admin/SiteConfigManager';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import { authenticateUser, createAuthSession, clearAuthSession } from '../../utils/auth';
+import { saveSiteConfig, saveProjects, saveContactInfo } from '../../utils/dataManager';
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -33,9 +34,27 @@ export default function AdminDashboard() {
   };
 
   const handleSave = (data, type) => {
-    console.log(`${type} data saved:`, data);
-    setLastSaved(new Date());
-    alert(`${type} updated successfully! Check the console for the updated data.`);
+    let success = false;
+    
+    try {
+      if (type === 'Site Configuration') {
+        success = saveSiteConfig(data);
+      } else if (type === 'Projects') {
+        success = saveProjects(data);
+      } else if (type === 'Contact Information') {
+        success = saveContactInfo(data);
+      }
+      
+      if (success) {
+        setLastSaved(new Date());
+        alert(`${type} updated successfully! Changes are now live on your website.`);
+      } else {
+        alert(`Error saving ${type}. Please try again.`);
+      }
+    } catch (error) {
+      console.error(`Error saving ${type}:`, error);
+      alert(`Error saving ${type}. Please try again.`);
+    }
   };
 
   const modules = [
