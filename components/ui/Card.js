@@ -1,8 +1,9 @@
-const Card = ({ children, className = '', ...props }) => {
-  const baseClasses = 'bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700';
+const Card = ({ children, className = '', hover = false, ...props }) => {
+  const baseClasses = 'bg-primary rounded-lg shadow-theme border border-primary transition-all duration-300';
   const paddingClasses = 'p-6';
+  const hoverClasses = hover ? 'hover:shadow-xl hover:-translate-y-1 cursor-pointer' : '';
   
-  const classes = `${baseClasses} ${paddingClasses} ${className}`;
+  const classes = `${baseClasses} ${paddingClasses} ${hoverClasses} ${className}`;
   
   return (
     <div className={classes} {...props}>
