@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Save, Upload, Download, RefreshCw, Eye, Edit, Trash2, Plus, 
   User, Globe, Mail, Phone, MapPin, Settings, Image, Code, FileText,
@@ -26,7 +26,7 @@ const SiteConfigManager = ({ onSave }) => {
     { id: 'export', label: 'Export/Import', icon: Download }
   ];
 
-  const handleInputChange = (section, field, value) => {
+  const handleInputChange = useCallback((section, field, value) => {
     setConfig(prev => ({
       ...prev,
       [section]: {
@@ -35,9 +35,9 @@ const SiteConfigManager = ({ onSave }) => {
       }
     }));
     setHasChanges(true);
-  };
+  }, []);
 
-  const handleNestedInputChange = (section, subsection, field, value) => {
+  const handleNestedInputChange = useCallback((section, subsection, field, value) => {
     setConfig(prev => ({
       ...prev,
       [section]: {
@@ -49,9 +49,9 @@ const SiteConfigManager = ({ onSave }) => {
       }
     }));
     setHasChanges(true);
-  };
+  }, []);
 
-  const handleArrayChange = (section, index, field, value) => {
+  const handleArrayChange = useCallback((section, index, field, value) => {
     setConfig(prev => ({
       ...prev,
       [section]: prev[section].map((item, i) => 
@@ -59,23 +59,23 @@ const SiteConfigManager = ({ onSave }) => {
       )
     }));
     setHasChanges(true);
-  };
+  }, []);
 
-  const addArrayItem = (section, newItem) => {
+  const addArrayItem = useCallback((section, newItem) => {
     setConfig(prev => ({
       ...prev,
       [section]: [...prev[section], newItem]
     }));
     setHasChanges(true);
-  };
+  }, []);
 
-  const removeArrayItem = (section, index) => {
+  const removeArrayItem = useCallback((section, index) => {
     setConfig(prev => ({
       ...prev,
       [section]: prev[section].filter((_, i) => i !== index)
     }));
     setHasChanges(true);
-  };
+  }, []);
 
   const handleSave = () => {
     if (onSave) {
@@ -91,7 +91,7 @@ const SiteConfigManager = ({ onSave }) => {
     setIsEditing(false);
   };
 
-  const exportConfig = () => {
+  const exportConfig = useCallback(() => {
     const configString = `export const siteConfig = ${JSON.stringify(config, null, 2)};
 
 export default siteConfig;`;
@@ -99,9 +99,9 @@ export default siteConfig;`;
     navigator.clipboard.writeText(configString);
     setCopySuccess(true);
     setTimeout(() => setCopySuccess(false), 2000);
-  };
+  }, [config]);
 
-  const importConfig = (event) => {
+  const importConfig = useCallback((event) => {
     const file = event.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -116,7 +116,7 @@ export default siteConfig;`;
       };
       reader.readAsText(file);
     }
-  };
+  }, []);
 
   const downloadConfig = () => {
     const configString = JSON.stringify(config, null, 2);
@@ -129,7 +129,7 @@ export default siteConfig;`;
     URL.revokeObjectURL(url);
   };
 
-  const renderPersonalTab = () => (
+  const renderPersonalTab = useCallback(() => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -266,9 +266,9 @@ export default siteConfig;`;
         </div>
       </div>
     </div>
-  );
+  ), [config, handleInputChange, handleArrayChange, addArrayItem, removeArrayItem]);
 
-  const renderHeroTab = () => (
+  const renderHeroTab = useCallback(() => (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
@@ -372,9 +372,9 @@ export default siteConfig;`;
         </div>
       </div>
     </div>
-  );
+  ), [config, handleInputChange]);
 
-  const renderSocialTab = () => (
+  const renderSocialTab = useCallback(() => (
     <div className="space-y-6">
       {Object.entries(config.social).map(([platform, data]) => (
         <Card key={platform} className="p-4">
@@ -419,9 +419,9 @@ export default siteConfig;`;
         </Card>
       ))}
     </div>
-  );
+  ), [config, handleNestedInputChange]);
 
-  const renderStatsTab = () => (
+  const renderStatsTab = useCallback(() => (
     <div className="space-y-8">
       <div>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -544,9 +544,9 @@ export default siteConfig;`;
         </div>
       </div>
     </div>
-  );
+  ), [config, handleArrayChange, addArrayItem, removeArrayItem]);
 
-  const renderExportTab = () => (
+  const renderExportTab = useCallback(() => (
     <div className="space-y-6">
       <Card className="p-6">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
@@ -625,7 +625,7 @@ export default siteConfig;`;
         </div>
       </Card>
     </div>
-  );
+  ), [copySuccess, exportConfig, importConfig]);
 
   const renderContent = () => {
     switch (activeTab) {
