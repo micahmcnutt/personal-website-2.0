@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ExternalLink, Github, Filter, Search, Eye, Star, Calendar, Code, Zap, X } from 'lucide-react';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
@@ -23,41 +23,75 @@ const PortfolioPage = () => {
 
   // Load projects from data manager
   useEffect(() => {
-    const loadedProjects = getProjects();
-    setAllProjects(loadedProjects);
-    setFilteredProjects(loadedProjects);
+    try {
+      const loadedProjects = getProjects();
+      if (Array.isArray(loadedProjects)) {
+        setAllProjects(loadedProjects);
+        setFilteredProjects(loadedProjects);
+      } else {
+        console.error('Projects data is not an array:', loadedProjects);
+        setAllProjects([]);
+        setFilteredProjects([]);
+      }
+    } catch (error) {
+      console.error('Error loading projects:', error);
+      setAllProjects([]);
+      setFilteredProjects([]);
+    }
   }, []);
 
   // Get all technologies from loaded projects
-  const allTechnologies = allProjects.reduce((acc, project) => {
-    project.technologies.forEach(tech => {
-      if (!acc.includes(tech)) {
-        acc.push(tech);
+  const allTechnologies = useMemo(() => {
+    if (!Array.isArray(allProjects)) return [];
+    
+    return allProjects.reduce((acc, project) => {
+      // Safety check for project and technologies
+      if (project && Array.isArray(project.technologies)) {
+        project.technologies.forEach(tech => {
+          if (tech && !acc.includes(tech)) {
+            acc.push(tech);
+          }
+        });
       }
-    });
-    return acc;
-  }, []);
-  const featuredProjects = allProjects.filter(project => project.featured);
+      return acc;
+    }, []);
+  }, [allProjects]);
+
+  const featuredProjects = useMemo(() => {
+    if (!Array.isArray(allProjects)) return [];
+    return allProjects.filter(project => project && project.featured);
+  }, [allProjects]);
 
   useEffect(() => {
     setIsLoading(true);
     const timer = setTimeout(() => {
-      let filtered = showFeatured ? featuredProjects : allProjects;
-      
-      if (selectedCategory !== 'all') {
-        filtered = filtered.filter(project => project.category === selectedCategory);
+      try {
+        let filtered = showFeatured ? featuredProjects : allProjects;
+        
+        if (selectedCategory !== 'all') {
+          filtered = filtered.filter(project => project && project.category === selectedCategory);
+        }
+        
+        if (searchTerm) {
+          filtered = filtered.filter(project => {
+            if (!project) return false;
+            
+            const titleMatch = project.title && project.title.toLowerCase().includes(searchTerm.toLowerCase());
+            const descriptionMatch = project.description && project.description.toLowerCase().includes(searchTerm.toLowerCase());
+            const techMatch = Array.isArray(project.technologies) && 
+              project.technologies.some(tech => tech && tech.toLowerCase().includes(searchTerm.toLowerCase()));
+            
+            return titleMatch || descriptionMatch || techMatch;
+          });
+        }
+        
+        setFilteredProjects(filtered || []);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error filtering projects:', error);
+        setFilteredProjects([]);
+        setIsLoading(false);
       }
-      
-      if (searchTerm) {
-        filtered = filtered.filter(project => 
-          project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          project.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          project.technologies.some(tech => tech.toLowerCase().includes(searchTerm.toLowerCase()))
-        );
-      }
-      
-      setFilteredProjects(filtered);
-      setIsLoading(false);
     }, 300);
 
     return () => clearTimeout(timer);
@@ -141,50 +175,56 @@ const PortfolioPage = () => {
     );
   };
 
-  const ProjectCard = ({ project }) => (
-    <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
-      <div className="relative">
-        <div className="aspect-video bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center relative overflow-hidden">
-          <span className="text-white font-semibold">Project Preview</span>
-          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity duration-300" />
-        </div>
-        
-        {project.featured && (
-          <div className="absolute top-3 right-3 bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-            <Star className="h-3 w-3" />
-            Featured
+  const ProjectCard = ({ project }) => {
+    // Safety check for project data
+    if (!project) return null;
+    
+    const technologies = Array.isArray(project.technologies) ? project.technologies : [];
+    
+    return (
+      <Card className="group overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+        <div className="relative">
+          <div className="aspect-video bg-gradient-to-br from-blue-400 to-purple-600 flex items-center justify-center relative overflow-hidden">
+            <span className="text-white font-semibold">Project Preview</span>
+            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity duration-300" />
           </div>
-        )}
-        
-        <div className="absolute top-3 left-3 bg-white dark:bg-gray-800 px-2 py-1 rounded-full text-xs font-medium text-gray-700 dark:text-gray-300">
-          {project.category}
-        </div>
-      </div>
-      
-      <div className="p-6">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-          {project.title}
-        </h3>
-        
-        <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
-          {project.description}
-        </p>
-        
-        <div className="flex flex-wrap gap-2 mb-6">
-          {project.technologies.slice(0, 3).map((tech) => (
-            <span
-              key={tech}
-              className="text-xs px-2 py-1 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded"
-            >
-              {tech}
-            </span>
-          ))}
-          {project.technologies.length > 3 && (
-            <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded">
-              +{project.technologies.length - 3} more
-            </span>
+          
+          {project.featured && (
+            <div className="absolute top-3 right-3 bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+              <Star className="h-3 w-3" />
+              Featured
+            </div>
           )}
+          
+          <div className="absolute top-3 left-3 bg-white dark:bg-gray-800 px-2 py-1 rounded-full text-xs font-medium text-gray-700 dark:text-gray-300">
+            {project.category || 'General'}
+          </div>
         </div>
+        
+        <div className="p-6">
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            {project.title || 'Untitled Project'}
+          </h3>
+          
+          <p className="text-gray-600 dark:text-gray-300 mb-4 line-clamp-3">
+            {project.description || 'No description available'}
+          </p>
+          
+          <div className="flex flex-wrap gap-2 mb-6">
+            {technologies.slice(0, 3).map((tech, index) => (
+              <span
+                key={`${tech}-${index}`}
+                className="text-xs px-2 py-1 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded"
+              >
+                {tech}
+              </span>
+            ))}
+            {technologies.length > 3 && (
+              <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded">
+                +{technologies.length - 3} more
+              </span>
+            )}
+          </div>
         
         <div className="flex gap-2">
           <Button
@@ -209,7 +249,8 @@ const PortfolioPage = () => {
         </div>
       </div>
     </Card>
-  );
+    );
+  };
 
   return (
     <div className="py-16 px-4 sm:px-6 lg:px-8">
@@ -323,7 +364,7 @@ const PortfolioPage = () => {
             </div>
           ) : filteredProjects.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredProjects.map((project) => (
+              {filteredProjects.filter(project => project && project.id).map((project) => (
                 <ProjectCard key={project.id} project={project} />
               ))}
             </div>
