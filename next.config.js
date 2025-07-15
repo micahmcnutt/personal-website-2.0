@@ -5,8 +5,9 @@ const nextConfig = {
   images: {
     unoptimized: true
   },
-  basePath: process.env.NODE_ENV === 'production' ? '/personal-website-2.0' : '',
-  assetPrefix: process.env.NODE_ENV === 'production' ? '/personal-website-2.0' : '',
+  // No basePath or assetPrefix needed for custom domain
+  // Ensure static export works properly
+  distDir: 'out',
 }
 
 module.exports = nextConfig 
