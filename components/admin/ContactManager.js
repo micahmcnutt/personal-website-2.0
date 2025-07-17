@@ -6,6 +6,227 @@ import {
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 
+// Extracted ContactForm component - isolated from parent re-renders
+const ContactForm = ({ 
+  contactFormData, 
+  editingContact, 
+  onInputChange,
+  onSave, 
+  onCancel,
+  iconOptions 
+}) => (
+  <Card className="mb-6">
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+          {editingContact ? 'Edit Contact Info' : 'Add Contact Info'}
+        </h3>
+        <Button
+          onClick={onCancel}
+          variant="outline"
+          size="sm"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Icon
+          </label>
+          <select
+            value={contactFormData.icon}
+            onChange={(e) => onInputChange('icon', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          >
+            {iconOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Label *
+          </label>
+          <input
+            type="text"
+            value={contactFormData.label}
+            onChange={(e) => onInputChange('label', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            placeholder="e.g., Email, Phone"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Value *
+          </label>
+          <input
+            type="text"
+            value={contactFormData.value}
+            onChange={(e) => onInputChange('value', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            placeholder="e.g., your@email.com, +1 (555) 123-4567"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Link (optional)
+          </label>
+          <input
+            type="text"
+            value={contactFormData.href}
+            onChange={(e) => onInputChange('href', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            placeholder="e.g., mailto:your@email.com, tel:+1555123456"
+          />
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Description
+          </label>
+          <input
+            type="text"
+            value={contactFormData.description}
+            onChange={(e) => onInputChange('description', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            placeholder="e.g., Best for project inquiries"
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-2 mt-6">
+        <Button onClick={onSave} variant="primary">
+          <Save className="h-4 w-4 mr-2" />
+          Save Contact
+        </Button>
+        <Button onClick={onCancel} variant="outline">
+          Cancel
+        </Button>
+      </div>
+    </div>
+  </Card>
+);
+
+// Extracted SocialForm component - isolated from parent re-renders
+const SocialForm = ({ 
+  socialFormData, 
+  editingSocial, 
+  onInputChange,
+  onSave, 
+  onCancel,
+  socialIconOptions,
+  colorOptions 
+}) => (
+  <Card className="mb-6">
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+          {editingSocial ? 'Edit Social Link' : 'Add Social Link'}
+        </h3>
+        <Button
+          onClick={onCancel}
+          variant="outline"
+          size="sm"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Platform Name *
+          </label>
+          <input
+            type="text"
+            value={socialFormData.name}
+            onChange={(e) => onInputChange('name', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            placeholder="e.g., GitHub, LinkedIn"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            URL *
+          </label>
+          <input
+            type="url"
+            value={socialFormData.href}
+            onChange={(e) => onInputChange('href', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            placeholder="https://github.com/username"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Icon
+          </label>
+          <select
+            value={socialFormData.icon}
+            onChange={(e) => onInputChange('icon', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          >
+            {socialIconOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Hover Color
+          </label>
+          <select
+            value={socialFormData.color}
+            onChange={(e) => onInputChange('color', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+          >
+            {colorOptions.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Description
+          </label>
+          <input
+            type="text"
+            value={socialFormData.description}
+            onChange={(e) => onInputChange('description', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+            placeholder="e.g., Check out my code"
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-2 mt-6">
+        <Button onClick={onSave} variant="primary">
+          <Save className="h-4 w-4 mr-2" />
+          Save Social Link
+        </Button>
+        <Button onClick={onCancel} variant="outline">
+          Cancel
+        </Button>
+      </div>
+    </div>
+  </Card>
+);
+
 const ContactManager = ({ onSave }) => {
   const [contactInfo, setContactInfo] = useState([
     {
@@ -197,47 +418,7 @@ const ContactManager = ({ onSave }) => {
     }));
   }, []);
 
-  // Create individual handlers for each contact field to avoid anonymous function recreation
-  const handleContactIconChange = useCallback((e) => {
-    handleContactInputChange('icon', e.target.value);
-  }, [handleContactInputChange]);
 
-  const handleContactLabelChange = useCallback((e) => {
-    handleContactInputChange('label', e.target.value);
-  }, [handleContactInputChange]);
-
-  const handleContactValueChange = useCallback((e) => {
-    handleContactInputChange('value', e.target.value);
-  }, [handleContactInputChange]);
-
-  const handleContactHrefChange = useCallback((e) => {
-    handleContactInputChange('href', e.target.value);
-  }, [handleContactInputChange]);
-
-  const handleContactDescriptionChange = useCallback((e) => {
-    handleContactInputChange('description', e.target.value);
-  }, [handleContactInputChange]);
-
-  // Create individual handlers for each social field to avoid anonymous function recreation
-  const handleSocialNameChange = useCallback((e) => {
-    handleSocialInputChange('name', e.target.value);
-  }, [handleSocialInputChange]);
-
-  const handleSocialHrefChange = useCallback((e) => {
-    handleSocialInputChange('href', e.target.value);
-  }, [handleSocialInputChange]);
-
-  const handleSocialIconChange = useCallback((e) => {
-    handleSocialInputChange('icon', e.target.value);
-  }, [handleSocialInputChange]);
-
-  const handleSocialColorChange = useCallback((e) => {
-    handleSocialInputChange('color', e.target.value);
-  }, [handleSocialInputChange]);
-
-  const handleSocialDescriptionChange = useCallback((e) => {
-    handleSocialInputChange('description', e.target.value);
-  }, [handleSocialInputChange]);
 
   const handleContactSave = useCallback(() => {
     if (!contactFormData.label.trim() || !contactFormData.value.trim()) {
@@ -319,227 +500,16 @@ const ContactManager = ({ onSave }) => {
     return icons[iconName] || Mail;
   }, []);
 
-  const ContactForm = useCallback(() => (
-    <Card className="mb-6">
-      <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {editingContact ? 'Edit Contact Info' : 'Add Contact Info'}
-          </h3>
-          <Button
-            onClick={() => {
-              setEditingContact(null);
-              setIsCreatingContact(false);
-            }}
-            variant="outline"
-            size="sm"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
+  // Helper functions for form handling
+  const handleContactCancel = useCallback(() => {
+    setEditingContact(null);
+    setIsCreatingContact(false);
+  }, []);
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Icon
-            </label>
-            <select
-              value={contactFormData.icon}
-              onChange={handleContactIconChange}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            >
-              {iconOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Label *
-            </label>
-            <input
-              type="text"
-              value={contactFormData.label}
-              onChange={handleContactLabelChange}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="e.g., Email, Phone"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Value *
-            </label>
-            <input
-              type="text"
-              value={contactFormData.value}
-              onChange={handleContactValueChange}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="e.g., your@email.com, +1 (555) 123-4567"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Link (optional)
-            </label>
-            <input
-              type="text"
-              value={contactFormData.href}
-              onChange={handleContactHrefChange}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="e.g., mailto:your@email.com, tel:+1555123456"
-            />
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Description
-            </label>
-            <input
-              type="text"
-              value={contactFormData.description}
-              onChange={handleContactDescriptionChange}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="e.g., Best for project inquiries"
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-2 mt-6">
-          <Button onClick={handleContactSave} variant="primary">
-            <Save className="h-4 w-4 mr-2" />
-            Save Contact
-          </Button>
-          <Button
-            onClick={() => {
-              setEditingContact(null);
-              setIsCreatingContact(false);
-            }}
-            variant="outline"
-          >
-            Cancel
-          </Button>
-        </div>
-      </div>
-    </Card>
-  ), [editingContact, handleContactIconChange, handleContactLabelChange, handleContactValueChange, handleContactHrefChange, handleContactDescriptionChange, handleContactSave]);
-
-  const SocialForm = useCallback(() => (
-    <Card className="mb-6">
-      <div className="p-6">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {editingSocial ? 'Edit Social Link' : 'Add Social Link'}
-          </h3>
-          <Button
-            onClick={() => {
-              setEditingSocial(null);
-              setIsCreatingSocial(false);
-            }}
-            variant="outline"
-            size="sm"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Platform Name *
-            </label>
-            <input
-              type="text"
-              value={socialFormData.name}
-              onChange={handleSocialNameChange}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="e.g., GitHub, LinkedIn"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              URL *
-            </label>
-            <input
-              type="url"
-              value={socialFormData.href}
-              onChange={handleSocialHrefChange}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="https://github.com/username"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Icon
-            </label>
-            <select
-              value={socialFormData.icon}
-              onChange={handleSocialIconChange}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            >
-              {socialIconOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Hover Color
-            </label>
-            <select
-              value={socialFormData.color}
-              onChange={handleSocialColorChange}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            >
-              {colorOptions.map(option => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Description
-            </label>
-            <input
-              type="text"
-              value={socialFormData.description}
-              onChange={handleSocialDescriptionChange}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              placeholder="e.g., Check out my code"
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-2 mt-6">
-          <Button onClick={handleSocialSave} variant="primary">
-            <Save className="h-4 w-4 mr-2" />
-            Save Social Link
-          </Button>
-          <Button
-            onClick={() => {
-              setEditingSocial(null);
-              setIsCreatingSocial(false);
-            }}
-            variant="outline"
-          >
-            Cancel
-          </Button>
-        </div>
-      </div>
-    </Card>
-  ), [editingSocial, handleSocialNameChange, handleSocialHrefChange, handleSocialIconChange, handleSocialColorChange, handleSocialDescriptionChange, handleSocialSave]);
+  const handleSocialCancel = useCallback(() => {
+    setEditingSocial(null);
+    setIsCreatingSocial(false);
+  }, []);
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -587,7 +557,16 @@ const ContactManager = ({ onSave }) => {
           </Button>
         </div>
 
-        {(isCreatingContact || editingContact) && <ContactForm />}
+        {(isCreatingContact || editingContact) && (
+          <ContactForm 
+            contactFormData={contactFormData}
+            editingContact={editingContact}
+            onInputChange={handleContactInputChange}
+            onSave={handleContactSave}
+            onCancel={handleContactCancel}
+            iconOptions={iconOptions}
+          />
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {contactInfo.map((contact) => {
@@ -653,7 +632,17 @@ const ContactManager = ({ onSave }) => {
           </Button>
         </div>
 
-        {(isCreatingSocial || editingSocial) && <SocialForm />}
+        {(isCreatingSocial || editingSocial) && (
+          <SocialForm 
+            socialFormData={socialFormData}
+            editingSocial={editingSocial}
+            onInputChange={handleSocialInputChange}
+            onSave={handleSocialSave}
+            onCancel={handleSocialCancel}
+            socialIconOptions={socialIconOptions}
+            colorOptions={colorOptions}
+          />
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {socialLinks.map((social) => {
