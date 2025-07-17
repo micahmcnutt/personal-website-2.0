@@ -213,34 +213,100 @@ export const GitHubSync = {
     }
   },
 
-  // Push local changes to GitHub
+  // Push local changes to GitHub with enhanced error handling
   async pushToGitHub(commitMessage = 'Update website content via admin panel') {
     try {
       const localProjects = getProjects();
       const localSiteConfig = getSiteConfig();
 
-      const [projectsResult, siteConfigResult] = await Promise.all([
-        GitHubContent.saveProjects(localProjects, `${commitMessage} - Projects`),
-        GitHubContent.saveSiteConfig(localSiteConfig, `${commitMessage} - Site Config`)
-      ]);
+      let projectsResult = null;
+      let siteConfigResult = null;
+      const errors = [];
 
-      // Update publish status
-      savePublishStatus({
-        lastPublished: new Date().toISOString(),
-        pendingChanges: false,
-        lastCommitSha: projectsResult.commitSha || siteConfigResult.commitSha,
-        lastCommitUrl: projectsResult.commitUrl || siteConfigResult.commitUrl
-      });
+      // Try to save projects
+      try {
+        projectsResult = await GitHubContent.saveProjects(localProjects, `${commitMessage} - Projects`);
+        console.log('Projects saved successfully:', projectsResult.retriesUsed ? `(${projectsResult.retriesUsed} retries used)` : '');
+      } catch (error) {
+        console.error('Error saving projects:', error);
+        errors.push(`Projects: ${error.message}`);
+      }
 
-      return {
-        success: true,
-        projectsResult,
-        siteConfigResult,
-        message: 'Content published successfully!'
-      };
+      // Try to save site config
+      try {
+        siteConfigResult = await GitHubContent.saveSiteConfig(localSiteConfig, `${commitMessage} - Site Config`);
+        console.log('Site config saved successfully:', siteConfigResult.retriesUsed ? `(${siteConfigResult.retriesUsed} retries used)` : '');
+      } catch (error) {
+        console.error('Error saving site config:', error);
+        errors.push(`Site Config: ${error.message}`);
+      }
+
+      // Check if we had any successes
+      const hasSuccesses = projectsResult || siteConfigResult;
+      
+      if (hasSuccesses) {
+        // Update publish status even if only partially successful
+        savePublishStatus({
+          lastPublished: new Date().toISOString(),
+          pendingChanges: errors.length > 0, // Keep pending if there were errors
+          lastCommitSha: projectsResult?.commitSha || siteConfigResult?.commitSha,
+          lastCommitUrl: projectsResult?.commitUrl || siteConfigResult?.commitUrl
+        });
+
+        return {
+          success: errors.length === 0,
+          partial: errors.length > 0 && hasSuccesses,
+          projectsResult,
+          siteConfigResult,
+          errors: errors.length > 0 ? errors : undefined,
+          message: errors.length === 0 
+            ? 'Content published successfully!' 
+            : `Partially published. Some errors occurred: ${errors.join(', ')}`
+        };
+      } else {
+        // Complete failure
+        return {
+          success: false,
+          errors,
+          message: `Failed to publish content: ${errors.join(', ')}`
+        };
+      }
     } catch (error) {
-      console.error('Error pushing to GitHub:', error);
-      return { success: false, error: error.message };
+      console.error('Unexpected error in pushToGitHub:', error);
+      return { 
+        success: false, 
+        error: error.message,
+        message: `Unexpected error: ${error.message}`
+      };
+    }
+  },
+
+  // Refresh local data from GitHub (useful for resolving conflicts)
+  async refreshFromGitHub() {
+    try {
+      console.log('Refreshing local data from GitHub...');
+      const result = await this.pullFromGitHub();
+      
+      if (result.success) {
+        console.log('Successfully refreshed from GitHub:', result);
+        return {
+          success: true,
+          message: result.updated 
+            ? 'Local data refreshed from GitHub'
+            : 'Local data is already up to date'
+        };
+      } else {
+        return {
+          success: false,
+          message: `Failed to refresh from GitHub: ${result.error}`
+        };
+      }
+    } catch (error) {
+      console.error('Error refreshing from GitHub:', error);
+      return {
+        success: false,
+        message: `Error refreshing data: ${error.message}`
+      };
     }
   },
 

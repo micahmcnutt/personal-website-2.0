@@ -65,11 +65,13 @@ class GitHubAPI {
     }
   }
 
-  // Update or create file in repository
-  async updateFile(path, content, message, sha = null) {
+  // Update or create file in repository with conflict resolution
+  async updateFile(path, content, message, sha = null, retryCount = 0) {
     if (!this.isConfigured()) {
       throw new Error('GitHub API not configured');
     }
+
+    const maxRetries = 3;
 
     try {
       const url = `${this.baseUrl}/repos/${this.owner}/${this.repo}/contents/${path}`;
@@ -93,6 +95,22 @@ class GitHubAPI {
 
       if (!response.ok) {
         const errorData = await response.json();
+        
+        // Handle 409 conflict - file has been updated since we got the SHA
+        if (response.status === 409 && retryCount < maxRetries) {
+          console.log(`SHA conflict detected, refetching latest version (attempt ${retryCount + 1}/${maxRetries})`);
+          
+          // Get the latest file to get the current SHA
+          const latestFile = await this.getFileContent(path);
+          if (latestFile) {
+            // Retry with the latest SHA
+            return this.updateFile(path, content, message, latestFile.sha, retryCount + 1);
+          } else {
+            // File was deleted, try creating it (no SHA needed)
+            return this.updateFile(path, content, message, null, retryCount + 1);
+          }
+        }
+        
         throw new Error(`GitHub API error: ${response.status} ${errorData.message || response.statusText}`);
       }
 
@@ -102,7 +120,8 @@ class GitHubAPI {
         sha: data.content.sha,
         path: data.content.path,
         commitSha: data.commit.sha,
-        commitUrl: data.commit.html_url
+        commitUrl: data.commit.html_url,
+        retriesUsed: retryCount
       };
     } catch (error) {
       console.error('Error updating file:', error);
@@ -150,6 +169,25 @@ const githubAPI = new GitHubAPI();
 
 // Content-specific helper functions
 export const GitHubContent = {
+  // Utility function to safely update a file with latest state
+  async safeUpdateFile(path, content, message) {
+    try {
+      // Always get the latest file state first
+      const currentFile = await githubAPI.getFileContent(path);
+      
+      const result = await githubAPI.updateFile(
+        path,
+        content,
+        message,
+        currentFile?.sha // Use latest SHA or null for new file
+      );
+      
+      return result;
+    } catch (error) {
+      console.error(`Error in safeUpdateFile for ${path}:`, error);
+      throw error;
+    }
+  },
   // Projects management
   async getProjects() {
     try {
@@ -166,16 +204,8 @@ export const GitHubContent = {
 
   async saveProjects(projects, message = 'Update projects data') {
     try {
-      const currentFile = await githubAPI.getFileContent('content/projects.json');
       const content = JSON.stringify(projects, null, 2);
-      
-      const result = await githubAPI.updateFile(
-        'content/projects.json',
-        content,
-        message,
-        currentFile?.sha
-      );
-      
+      const result = await this.safeUpdateFile('content/projects.json', content, message);
       return result;
     } catch (error) {
       console.error('Error saving projects to GitHub:', error);
@@ -199,16 +229,8 @@ export const GitHubContent = {
 
   async saveSiteConfig(config, message = 'Update site configuration') {
     try {
-      const currentFile = await githubAPI.getFileContent('content/siteConfig.json');
       const content = JSON.stringify(config, null, 2);
-      
-      const result = await githubAPI.updateFile(
-        'content/siteConfig.json',
-        content,
-        message,
-        currentFile?.sha
-      );
-      
+      const result = await this.safeUpdateFile('content/siteConfig.json', content, message);
       return result;
     } catch (error) {
       console.error('Error saving site config to GitHub:', error);

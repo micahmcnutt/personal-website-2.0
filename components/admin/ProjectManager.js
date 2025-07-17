@@ -60,13 +60,27 @@ const ProjectManager = ({ onSave }) => {
       const result = await GitHubSync.pushToGitHub(commitMessage);
       
       if (result.success) {
-        alert('Projects published successfully! Your website will update automatically.');
+        alert('✅ Projects published successfully! Your website will update automatically.');
+        updateSyncStatus();
+      } else if (result.partial) {
+        alert(`⚠️ Partially published: ${result.message}\n\nSome content was saved successfully, but there were errors with other parts.`);
         updateSyncStatus();
       } else {
-        throw new Error(result.error);
+        // Complete failure - try to refresh and suggest retry
+        alert(`❌ Publishing failed: ${result.message}\n\nTrying to refresh data from GitHub to resolve conflicts...`);
+        
+        // Attempt to refresh from GitHub
+        const refreshResult = await GitHubSync.refreshFromGitHub();
+        if (refreshResult.success) {
+          alert(`🔄 Data refreshed successfully. Please try publishing again.\n\n${refreshResult.message}`);
+          updateSyncStatus();
+        } else {
+          alert(`❌ Could not refresh data: ${refreshResult.message}\n\nPlease check your internet connection and GitHub credentials.`);
+        }
       }
     } catch (error) {
-      alert(`Error publishing projects: ${error.message}`);
+      alert(`💥 Unexpected error: ${error.message}\n\nPlease try again or check the browser console for more details.`);
+      console.error('Publishing error details:', error);
     } finally {
       setIsPublishing(false);
     }
