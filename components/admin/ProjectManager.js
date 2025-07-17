@@ -60,7 +60,22 @@ const ProjectManager = ({ onSave }) => {
       const result = await GitHubSync.pushToGitHub(commitMessage);
       
       if (result.success) {
-        alert('✅ Projects published successfully! Your website will update automatically.');
+        alert('✅ Content published successfully! Your website will update automatically.');
+        
+        // Auto-refresh admin data from GitHub to stay in sync
+        console.log('Auto-refreshing admin data from GitHub...');
+        try {
+          const refreshResult = await GitHubSync.refreshFromGitHub();
+          if (refreshResult.success) {
+            // Reload projects from updated localStorage
+            const freshProjects = getProjects();
+            setProjects(freshProjects);
+            console.log('✅ Admin data auto-refreshed successfully');
+          }
+        } catch (refreshError) {
+          console.warn('Could not auto-refresh admin data:', refreshError);
+        }
+        
         updateSyncStatus();
       } else if (result.partial) {
         alert(`⚠️ Partially published: ${result.message}\n\nSome content was saved successfully, but there were errors with other parts.`);

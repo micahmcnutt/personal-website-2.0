@@ -506,7 +506,26 @@ const ContactManager = ({ onSave }) => {
       const result = await GitHubSync.pushToGitHub(commitMessage);
       
       if (result.success) {
-        alert('✅ Contact information published successfully! Your website will update automatically.');
+        alert('✅ Content published successfully! Your website will update automatically.');
+        
+        // Auto-refresh admin data from GitHub to stay in sync
+        console.log('Auto-refreshing admin data from GitHub...');
+        try {
+          const refreshResult = await GitHubSync.refreshFromGitHub();
+          if (refreshResult.success) {
+            // Reload siteConfig and reconstruct contact data
+            const freshConfig = getSiteConfig();
+            setSiteConfig(freshConfig);
+            
+            const { contactInfo, socialLinks } = convertSiteConfigToContactFormat(freshConfig);
+            setContactInfo(contactInfo);
+            setSocialLinks(socialLinks);
+            console.log('✅ Admin data auto-refreshed successfully');
+          }
+        } catch (refreshError) {
+          console.warn('Could not auto-refresh admin data:', refreshError);
+        }
+        
         updateSyncStatus();
       } else if (result.partial) {
         alert(`⚠️ Partially published: ${result.message}\n\nSome content was saved successfully, but there were errors with other parts.`);

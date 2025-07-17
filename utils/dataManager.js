@@ -213,70 +213,39 @@ export const GitHubSync = {
     }
   },
 
-  // Push local changes to GitHub with enhanced error handling
+  // Push local changes to GitHub with enhanced error handling (single commit)
   async pushToGitHub(commitMessage = 'Update website content via admin panel') {
     try {
       const localProjects = getProjects();
       const localSiteConfig = getSiteConfig();
 
-      let projectsResult = null;
-      let siteConfigResult = null;
-      const errors = [];
+      console.log('Publishing content in single atomic commit...');
 
-      // Try to save projects
-      try {
-        projectsResult = await GitHubContent.saveProjects(localProjects, `${commitMessage} - Projects`);
-        console.log('Projects saved successfully:', projectsResult.retriesUsed ? `(${projectsResult.retriesUsed} retries used)` : '');
-      } catch (error) {
-        console.error('Error saving projects:', error);
-        errors.push(`Projects: ${error.message}`);
-      }
-
-      // Try to save site config
-      try {
-        siteConfigResult = await GitHubContent.saveSiteConfig(localSiteConfig, `${commitMessage} - Site Config`);
-        console.log('Site config saved successfully:', siteConfigResult.retriesUsed ? `(${siteConfigResult.retriesUsed} retries used)` : '');
-      } catch (error) {
-        console.error('Error saving site config:', error);
-        errors.push(`Site Config: ${error.message}`);
-      }
-
-      // Check if we had any successes
-      const hasSuccesses = projectsResult || siteConfigResult;
+      // Use the new batch update function for atomic commits
+      const result = await GitHubContent.saveBoth(localProjects, localSiteConfig, commitMessage);
       
-      if (hasSuccesses) {
-        // Update publish status even if only partially successful
-        savePublishStatus({
-          lastPublished: new Date().toISOString(),
-          pendingChanges: errors.length > 0, // Keep pending if there were errors
-          lastCommitSha: projectsResult?.commitSha || siteConfigResult?.commitSha,
-          lastCommitUrl: projectsResult?.commitUrl || siteConfigResult?.commitUrl
-        });
+      console.log(`✅ Successfully published in single commit (${result.filesUpdated} files updated)`);
 
-        return {
-          success: errors.length === 0,
-          partial: errors.length > 0 && hasSuccesses,
-          projectsResult,
-          siteConfigResult,
-          errors: errors.length > 0 ? errors : undefined,
-          message: errors.length === 0 
-            ? 'Content published successfully!' 
-            : `Partially published. Some errors occurred: ${errors.join(', ')}`
-        };
-      } else {
-        // Complete failure
-        return {
-          success: false,
-          errors,
-          message: `Failed to publish content: ${errors.join(', ')}`
-        };
-      }
+      // Update publish status
+      savePublishStatus({
+        lastPublished: new Date().toISOString(),
+        pendingChanges: false,
+        lastCommitSha: result.commitSha,
+        lastCommitUrl: result.commitUrl
+      });
+
+      return {
+        success: true,
+        result,
+        message: `Content published successfully in single commit! Updated ${result.filesUpdated} files.`,
+        singleCommit: true
+      };
     } catch (error) {
-      console.error('Unexpected error in pushToGitHub:', error);
+      console.error('Error in pushToGitHub:', error);
       return { 
         success: false, 
         error: error.message,
-        message: `Unexpected error: ${error.message}`
+        message: `Failed to publish content: ${error.message}`
       };
     }
   },
