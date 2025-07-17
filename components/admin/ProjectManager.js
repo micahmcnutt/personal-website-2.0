@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, Save, X, Star, Upload, Eye, ExternalLink, Github } from 'lucide-react';
+import { Plus, Edit, Trash2, Save, X, Star, Upload, Eye, ExternalLink, Github, AlertCircle, CheckCircle, RefreshCw, Zap } from 'lucide-react';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import { projects as initialProjects } from '../../data/projects';
+import { GitHubSync } from '../../utils/dataManager';
 
 const ProjectManager = ({ onSave }) => {
   const [projects, setProjects] = useState(initialProjects);
   const [editingProject, setEditingProject] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [syncStatus, setSyncStatus] = useState(null);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -21,6 +24,52 @@ const ProjectManager = ({ onSave }) => {
   const [newTechnology, setNewTechnology] = useState('');
 
   const categories = ['web', 'mobile', 'backend', 'tools'];
+
+  // Load sync status on component mount
+  useEffect(() => {
+    updateSyncStatus();
+  }, []);
+
+  const updateSyncStatus = () => {
+    const status = GitHubSync.getSyncStatus();
+    setSyncStatus(status);
+  };
+
+  const quickPublish = async () => {
+    if (!syncStatus?.isConfigured) {
+      alert('GitHub integration is not configured. Please set it up first.');
+      return;
+    }
+
+    if (!syncStatus?.pendingChanges) {
+      alert('No changes to publish.');
+      return;
+    }
+
+    const commitMessage = prompt(
+      'Enter a commit message for this project update:',
+      'Update projects via admin panel'
+    );
+    
+    if (!commitMessage) return;
+
+    setIsPublishing(true);
+    
+    try {
+      const result = await GitHubSync.pushToGitHub(commitMessage);
+      
+      if (result.success) {
+        alert('Projects published successfully! Your website will update automatically.');
+        updateSyncStatus();
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      alert(`Error publishing projects: ${error.message}`);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
 
   useEffect(() => {
     if (editingProject) {
@@ -87,6 +136,9 @@ const ProjectManager = ({ onSave }) => {
     setEditingProject(null);
     setIsCreating(false);
     
+    // Update sync status since we made changes
+    setTimeout(updateSyncStatus, 100);
+    
     // Call the onSave callback if provided
     if (onSave) {
       onSave(projects);
@@ -96,6 +148,8 @@ const ProjectManager = ({ onSave }) => {
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this project?')) {
       setProjects(prev => prev.filter(p => p.id !== id));
+      // Update sync status since we made changes
+      setTimeout(updateSyncStatus, 100);
     }
   };
 
@@ -103,6 +157,8 @@ const ProjectManager = ({ onSave }) => {
     setProjects(prev => prev.map(p => 
       p.id === id ? { ...p, featured: !p.featured } : p
     ));
+    // Update sync status since we made changes
+    setTimeout(updateSyncStatus, 100);
   };
 
   const generateCodeSnippet = () => {
@@ -291,8 +347,71 @@ const ProjectManager = ({ onSave }) => {
             <Upload className="h-4 w-4 mr-2" />
             Export Code
           </Button>
+          {syncStatus?.isConfigured && (
+            <Button
+              onClick={quickPublish}
+              variant={syncStatus.pendingChanges ? "primary" : "outline"}
+              disabled={isPublishing || !syncStatus.pendingChanges}
+            >
+              {isPublishing ? (
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Zap className="h-4 w-4 mr-2" />
+              )}
+              {syncStatus.pendingChanges ? 'Publish Changes' : 'Published'}
+            </Button>
+          )}
         </div>
       </div>
+
+      {/* GitHub Sync Status Card */}
+      {syncStatus && (
+        <Card className="mb-6">
+          <div className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Github className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    GitHub Sync Status
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {syncStatus.isConfigured 
+                      ? syncStatus.pendingChanges 
+                        ? 'You have unpublished changes'
+                        : 'All changes are published'
+                      : 'GitHub integration not configured'
+                    }
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {syncStatus.isConfigured ? (
+                  syncStatus.pendingChanges ? (
+                    <AlertCircle className="h-5 w-5 text-orange-500" />
+                  ) : (
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  )
+                ) : (
+                  <AlertCircle className="h-5 w-5 text-gray-400" />
+                )}
+                
+                {!syncStatus.isConfigured && (
+                  <Button
+                    as="a"
+                    href="/admin/github"
+                    variant="outline"
+                    size="sm"
+                  >
+                    Setup GitHub
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <div className="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
@@ -317,7 +436,7 @@ const ProjectManager = ({ onSave }) => {
           <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
             {projects.filter(p => p.liveUrl).length}
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-300">Live Demos</div>
+          <div className="text-sm text-gray-600 dark:text-gray-300">Live Projects</div>
         </div>
       </div>
 

@@ -86,12 +86,26 @@ export default function ProjectsAdmin() {
                     Manage your portfolio projects with ease
                   </p>
                 </div>
-                <button
-                  onClick={() => router.push('/portfolio')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  View Portfolio
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => router.push('/admin/contact')}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    Manage Contact
+                  </button>
+                  <button
+                    onClick={() => router.push('/admin/github')}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    GitHub Setup
+                  </button>
+                  <button
+                    onClick={() => router.push('/portfolio')}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
+                    View Portfolio
+                  </button>
+                </div>
               </div>
               
               <ProjectManager onSave={handleProjectSave} />

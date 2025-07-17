@@ -1,9 +1,88 @@
 import { siteConfig as defaultSiteConfig } from '../data/siteConfig';
 import { projects as defaultProjects } from '../data/projects';
+import githubAPI, { GitHubContent } from './githubApi';
 
 const STORAGE_KEYS = {
   SITE_CONFIG: 'personal_website_site_config',
-  PROJECTS: 'personal_website_projects'
+  PROJECTS: 'personal_website_projects',
+  GITHUB_CONFIG: 'personal_website_github_config',
+  PUBLISH_STATUS: 'personal_website_publish_status'
+};
+
+// GitHub configuration management
+export const getGitHubConfig = () => {
+  if (typeof window === 'undefined') return null;
+  
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.GITHUB_CONFIG);
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.warn('Error reading GitHub config from localStorage:', error);
+    return null;
+  }
+};
+
+export const saveGitHubConfig = (config) => {
+  if (typeof window === 'undefined') return false;
+  
+  try {
+    localStorage.setItem(STORAGE_KEYS.GITHUB_CONFIG, JSON.stringify(config));
+    
+    // Initialize GitHub API with new config
+    if (config.token && config.owner && config.repo) {
+      githubAPI.initialize(config.token, config.owner, config.repo, config.branch || 'main');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error saving GitHub config to localStorage:', error);
+    return false;
+  }
+};
+
+export const clearGitHubConfig = () => {
+  if (typeof window === 'undefined') return false;
+  
+  try {
+    localStorage.removeItem(STORAGE_KEYS.GITHUB_CONFIG);
+    return true;
+  } catch (error) {
+    console.error('Error clearing GitHub config:', error);
+    return false;
+  }
+};
+
+// Initialize GitHub API on load if config exists
+if (typeof window !== 'undefined') {
+  const githubConfig = getGitHubConfig();
+  if (githubConfig?.token && githubConfig?.owner && githubConfig?.repo) {
+    githubAPI.initialize(githubConfig.token, githubConfig.owner, githubConfig.repo, githubConfig.branch || 'main');
+  }
+}
+
+// Publish status management
+export const getPublishStatus = () => {
+  if (typeof window === 'undefined') return null;
+  
+  try {
+    const stored = localStorage.getItem(STORAGE_KEYS.PUBLISH_STATUS);
+    return stored ? JSON.parse(stored) : { lastPublished: null, pendingChanges: false };
+  } catch (error) {
+    console.warn('Error reading publish status:', error);
+    return { lastPublished: null, pendingChanges: false };
+  }
+};
+
+export const savePublishStatus = (status) => {
+  if (typeof window === 'undefined') return false;
+  
+  try {
+    localStorage.setItem(STORAGE_KEYS.PUBLISH_STATUS, JSON.stringify(status));
+    return true;
+  } catch (error) {
+    console.error('Error saving publish status:', error);
+    return false;
+  }
 };
 
 // Generic function to get data from localStorage with fallback
@@ -29,6 +108,11 @@ const saveData = (key, data) => {
   
   try {
     localStorage.setItem(key, JSON.stringify(data));
+    
+    // Mark as having pending changes
+    const status = getPublishStatus();
+    savePublishStatus({ ...status, pendingChanges: true });
+    
     return true;
   } catch (error) {
     console.error(`Error saving ${key} to localStorage:`, error);
@@ -65,8 +149,6 @@ export const saveProjects = (projects) => {
   return saveData(STORAGE_KEYS.PROJECTS, projects);
 };
 
-// Contact Information is part of site config - no separate functions needed
-
 // Utility function to get featured projects
 export const getFeaturedProjects = () => {
   try {
@@ -79,6 +161,107 @@ export const getFeaturedProjects = () => {
   } catch (error) {
     console.error('Error in getFeaturedProjects:', error);
     return [];
+  }
+};
+
+// GitHub Integration Functions
+export const GitHubSync = {
+  // Validate GitHub connection
+  async validateConnection() {
+    try {
+      const validation = await githubAPI.validateAccess();
+      return validation;
+    } catch (error) {
+      return { valid: false, error: error.message };
+    }
+  },
+
+  // Pull latest content from GitHub
+  async pullFromGitHub() {
+    try {
+      const [projects, siteConfig] = await Promise.all([
+        GitHubContent.getProjects(),
+        GitHubContent.getSiteConfig()
+      ]);
+
+      let updated = false;
+
+      if (projects) {
+        saveData(STORAGE_KEYS.PROJECTS, projects);
+        updated = true;
+      }
+
+      if (siteConfig) {
+        saveData(STORAGE_KEYS.SITE_CONFIG, siteConfig);
+        updated = true;
+      }
+
+      if (updated) {
+        // Reset pending changes since we just pulled from GitHub
+        savePublishStatus({ lastPulled: new Date().toISOString(), pendingChanges: false });
+      }
+
+      return {
+        success: true,
+        updated,
+        projectsUpdated: !!projects,
+        siteConfigUpdated: !!siteConfig
+      };
+    } catch (error) {
+      console.error('Error pulling from GitHub:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Push local changes to GitHub
+  async pushToGitHub(commitMessage = 'Update website content via admin panel') {
+    try {
+      const localProjects = getProjects();
+      const localSiteConfig = getSiteConfig();
+
+      const [projectsResult, siteConfigResult] = await Promise.all([
+        GitHubContent.saveProjects(localProjects, `${commitMessage} - Projects`),
+        GitHubContent.saveSiteConfig(localSiteConfig, `${commitMessage} - Site Config`)
+      ]);
+
+      // Update publish status
+      savePublishStatus({
+        lastPublished: new Date().toISOString(),
+        pendingChanges: false,
+        lastCommitSha: projectsResult.commitSha || siteConfigResult.commitSha,
+        lastCommitUrl: projectsResult.commitUrl || siteConfigResult.commitUrl
+      });
+
+      return {
+        success: true,
+        projectsResult,
+        siteConfigResult,
+        message: 'Content published successfully!'
+      };
+    } catch (error) {
+      console.error('Error pushing to GitHub:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  // Check if there are pending changes
+  hasPendingChanges() {
+    const status = getPublishStatus();
+    return status.pendingChanges;
+  },
+
+  // Get sync status
+  getSyncStatus() {
+    const status = getPublishStatus();
+    const githubConfig = getGitHubConfig();
+    
+    return {
+      isConfigured: githubConfig?.token && githubConfig?.owner && githubConfig?.repo,
+      pendingChanges: status.pendingChanges,
+      lastPublished: status.lastPublished,
+      lastPulled: status.lastPulled,
+      lastCommitUrl: status.lastCommitUrl
+    };
   }
 };
 
@@ -102,6 +285,8 @@ export const exportAllData = () => {
   return {
     siteConfig: getSiteConfig(),
     projects: getProjects(),
+    githubConfig: getGitHubConfig(),
+    publishStatus: getPublishStatus(),
     exportDate: new Date().toISOString()
   };
 };

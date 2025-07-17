@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Layout from '../../components/layout/Layout';
-import ContactManager from '../../components/admin/ContactManager';
-import { authenticateUser, createAuthSession, clearAuthSession } from '../../utils/auth';
+import GitHubSetup from '../../components/admin/GitHubSetup';
+import { authenticateUser, createAuthSession } from '../../utils/auth';
 
-export default function ContactAdmin() {
+export default function GitHubAdmin() {
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
@@ -21,18 +21,11 @@ export default function ContactAdmin() {
     }
   };
 
-  const handleContactSave = (contactData) => {
-    console.log('Updated contact data:', contactData);
-    // In a real application, you would save this to your database
-    // For now, we'll just show a success message
-    alert('Contact information updated successfully! Check the console for the updated data.');
-  };
-
   return (
     <Layout>
       <Head>
-        <title>Contact Admin - Micah McNutt</title>
-        <meta name="description" content="Admin panel for managing contact information" />
+        <title>GitHub Integration - Micah McNutt</title>
+        <meta name="description" content="GitHub integration setup for automated content publishing" />
       </Head>
       
       {!isAuthenticated ? (
@@ -43,7 +36,7 @@ export default function ContactAdmin() {
                 Admin Login
               </h2>
               <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-                Enter password to access the admin panel
+                Enter password to access the GitHub integration setup
               </p>
             </div>
             <form className="mt-8 space-y-6" onSubmit={handleAuth}>
@@ -76,39 +69,33 @@ export default function ContactAdmin() {
       ) : (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
           <div className="py-8">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                    Contact Admin
+                    GitHub Integration
                   </h1>
                   <p className="mt-2 text-gray-600 dark:text-gray-400">
-                    Manage your contact information and social media links
+                    Set up automated publishing to your GitHub repository
                   </p>
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => router.push('/admin/projects')}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                   >
                     Manage Projects
                   </button>
                   <button
-                    onClick={() => router.push('/admin/github')}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                    onClick={() => router.push('/admin/contact')}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
                   >
-                    GitHub Setup
-                  </button>
-                  <button
-                    onClick={() => router.push('/contact')}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                  >
-                    View Contact Page
+                    Manage Contact
                   </button>
                 </div>
               </div>
               
-              <ContactManager onSave={handleContactSave} />
+              <GitHubSetup />
             </div>
           </div>
         </div>

@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { 
   Plus, Edit, Trash2, Save, X, Mail, Phone, MapPin, MessageCircle,
-  Github, Linkedin, Twitter, Instagram, Youtube, Globe, Upload, Copy
+  Github, Linkedin, Twitter, Instagram, Youtube, Globe, Upload, Copy,
+  AlertCircle, CheckCircle, RefreshCw, Zap
 } from 'lucide-react';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
+import { GitHubSync } from '../../utils/dataManager';
 
 // Extracted ContactForm component - isolated from parent re-renders
 const ContactForm = ({ 
@@ -228,6 +230,8 @@ const SocialForm = ({
 );
 
 const ContactManager = ({ onSave }) => {
+  const [syncStatus, setSyncStatus] = useState(null);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [contactInfo, setContactInfo] = useState([
     {
       id: 1,
@@ -364,6 +368,52 @@ const ContactManager = ({ onSave }) => {
     { value: 'hover:text-yellow-600', label: 'Yellow' }
   ];
 
+  // Load sync status on component mount
+  useEffect(() => {
+    updateSyncStatus();
+  }, []);
+
+  const updateSyncStatus = () => {
+    const status = GitHubSync.getSyncStatus();
+    setSyncStatus(status);
+  };
+
+  const quickPublish = async () => {
+    if (!syncStatus?.isConfigured) {
+      alert('GitHub integration is not configured. Please set it up first.');
+      return;
+    }
+
+    if (!syncStatus?.pendingChanges) {
+      alert('No changes to publish.');
+      return;
+    }
+
+    const commitMessage = prompt(
+      'Enter a commit message for this contact update:',
+      'Update contact information via admin panel'
+    );
+    
+    if (!commitMessage) return;
+
+    setIsPublishing(true);
+    
+    try {
+      const result = await GitHubSync.pushToGitHub(commitMessage);
+      
+      if (result.success) {
+        alert('Contact information published successfully! Your website will update automatically.');
+        updateSyncStatus();
+      } else {
+        throw new Error(result.error);
+      }
+    } catch (error) {
+      alert(`Error publishing contact info: ${error.message}`);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
   useEffect(() => {
     if (editingContact) {
       setContactFormData({
@@ -440,6 +490,9 @@ const ContactManager = ({ onSave }) => {
 
     setEditingContact(null);
     setIsCreatingContact(false);
+    
+    // Update sync status since we made changes
+    setTimeout(updateSyncStatus, 100);
   }, [contactFormData, editingContact]);
 
   const handleSocialSave = useCallback(() => {
@@ -461,6 +514,9 @@ const ContactManager = ({ onSave }) => {
 
     setEditingSocial(null);
     setIsCreatingSocial(false);
+    
+    // Update sync status since we made changes
+    setTimeout(updateSyncStatus, 100);
   }, [socialFormData, editingSocial]);
 
   const handleContactDelete = useCallback((id) => {
@@ -472,6 +528,8 @@ const ContactManager = ({ onSave }) => {
   const handleSocialDelete = useCallback((id) => {
     if (window.confirm('Are you sure you want to delete this social link?')) {
       setSocialLinks(prev => prev.filter(s => s.id !== id));
+      // Update sync status since we made changes
+      setTimeout(updateSyncStatus, 100);
     }
   }, []);
 
@@ -517,14 +575,79 @@ const ContactManager = ({ onSave }) => {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           Contact Manager
         </h1>
-        <Button
-          onClick={generateContactCode}
-          variant="outline"
-        >
-          <Upload className="h-4 w-4 mr-2" />
-          Export Code
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={generateContactCode}
+            variant="outline"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Export Code
+          </Button>
+          {syncStatus?.isConfigured && (
+            <Button
+              onClick={quickPublish}
+              variant={syncStatus.pendingChanges ? "primary" : "outline"}
+              disabled={isPublishing || !syncStatus.pendingChanges}
+            >
+              {isPublishing ? (
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Zap className="h-4 w-4 mr-2" />
+              )}
+              {syncStatus.pendingChanges ? 'Publish Changes' : 'Published'}
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* GitHub Sync Status Card */}
+      {syncStatus && (
+        <Card className="mb-6">
+          <div className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Github className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                <div>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    GitHub Sync Status
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {syncStatus.isConfigured 
+                      ? syncStatus.pendingChanges 
+                        ? 'You have unpublished changes'
+                        : 'All changes are published'
+                      : 'GitHub integration not configured'
+                    }
+                  </p>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {syncStatus.isConfigured ? (
+                  syncStatus.pendingChanges ? (
+                    <AlertCircle className="h-5 w-5 text-orange-500" />
+                  ) : (
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                  )
+                ) : (
+                  <AlertCircle className="h-5 w-5 text-gray-400" />
+                )}
+                
+                {!syncStatus.isConfigured && (
+                  <Button
+                    as="a"
+                    href="/admin/github"
+                    variant="outline"
+                    size="sm"
+                  >
+                    Setup GitHub
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
