@@ -63,17 +63,27 @@ const ProjectManager = ({ onSave }) => {
         alert('✅ Content published successfully! Your website will update automatically.');
         
         // Auto-refresh admin data from GitHub to stay in sync
-        console.log('Auto-refreshing admin data from GitHub...');
+        console.log('🔄 Auto-refreshing admin data from GitHub...');
         try {
           const refreshResult = await GitHubSync.refreshFromGitHub();
           if (refreshResult.success) {
             // Reload projects from updated localStorage
             const freshProjects = getProjects();
             setProjects(freshProjects);
-            console.log('✅ Admin data auto-refreshed successfully');
+            updateSyncStatus(); // Update sync status to reflect new state
+            console.log('✅ Admin data auto-refreshed successfully:', refreshResult.message);
+            
+            // Optional: Show success message if data was actually updated
+            if (refreshResult.updated && refreshResult.projectsUpdated) {
+              console.log('📝 Projects data was updated from GitHub');
+            }
+          } else {
+            console.warn('⚠️ Could not auto-refresh admin data:', refreshResult.message);
+            // Continue anyway - the publish was successful
           }
         } catch (refreshError) {
-          console.warn('Could not auto-refresh admin data:', refreshError);
+          console.warn('💥 Error during auto-refresh:', refreshError);
+          // Continue anyway - the publish was successful
         }
         
         updateSyncStatus();
@@ -87,8 +97,11 @@ const ProjectManager = ({ onSave }) => {
         // Attempt to refresh from GitHub
         const refreshResult = await GitHubSync.refreshFromGitHub();
         if (refreshResult.success) {
-          alert(`🔄 Data refreshed successfully. Please try publishing again.\n\n${refreshResult.message}`);
+          // Reload projects from refreshed localStorage
+          const freshProjects = getProjects();
+          setProjects(freshProjects);
           updateSyncStatus();
+          alert(`🔄 Data refreshed successfully. Please try publishing again.\n\n${refreshResult.message}`);
         } else {
           alert(`❌ Could not refresh data: ${refreshResult.message}\n\nPlease check your internet connection and GitHub credentials.`);
         }

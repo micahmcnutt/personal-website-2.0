@@ -253,25 +253,35 @@ export const GitHubSync = {
   // Refresh local data from GitHub (useful for resolving conflicts)
   async refreshFromGitHub() {
     try {
-      console.log('Refreshing local data from GitHub...');
+      console.log('🔄 Refreshing local data from GitHub...');
       const result = await this.pullFromGitHub();
       
       if (result.success) {
-        console.log('Successfully refreshed from GitHub:', result);
+        console.log('✅ Successfully refreshed from GitHub:', result);
+        
+        // Provide detailed feedback about what was updated
+        const details = [];
+        if (result.projectsUpdated) details.push('projects');
+        if (result.siteConfigUpdated) details.push('site config');
+        
         return {
           success: true,
+          updated: result.updated,
+          projectsUpdated: result.projectsUpdated,
+          siteConfigUpdated: result.siteConfigUpdated,
           message: result.updated 
-            ? 'Local data refreshed from GitHub'
+            ? `Local data refreshed from GitHub (updated: ${details.join(', ')})`
             : 'Local data is already up to date'
         };
       } else {
+        console.error('❌ Failed to refresh from GitHub:', result.error);
         return {
           success: false,
           message: `Failed to refresh from GitHub: ${result.error}`
         };
       }
     } catch (error) {
-      console.error('Error refreshing from GitHub:', error);
+      console.error('💥 Error refreshing from GitHub:', error);
       return {
         success: false,
         message: `Error refreshing data: ${error.message}`
