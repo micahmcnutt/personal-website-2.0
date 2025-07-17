@@ -346,7 +346,7 @@ const PortfolioPage = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
           <div className="text-center">
             <div className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">
-              {projects.length}
+              {allProjects.length}
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-300">Total Projects</div>
           </div>
