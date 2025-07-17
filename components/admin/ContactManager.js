@@ -197,6 +197,48 @@ const ContactManager = ({ onSave }) => {
     }));
   }, []);
 
+  // Create individual handlers for each contact field to avoid anonymous function recreation
+  const handleContactIconChange = useCallback((e) => {
+    handleContactInputChange('icon', e.target.value);
+  }, [handleContactInputChange]);
+
+  const handleContactLabelChange = useCallback((e) => {
+    handleContactInputChange('label', e.target.value);
+  }, [handleContactInputChange]);
+
+  const handleContactValueChange = useCallback((e) => {
+    handleContactInputChange('value', e.target.value);
+  }, [handleContactInputChange]);
+
+  const handleContactHrefChange = useCallback((e) => {
+    handleContactInputChange('href', e.target.value);
+  }, [handleContactInputChange]);
+
+  const handleContactDescriptionChange = useCallback((e) => {
+    handleContactInputChange('description', e.target.value);
+  }, [handleContactInputChange]);
+
+  // Create individual handlers for each social field to avoid anonymous function recreation
+  const handleSocialNameChange = useCallback((e) => {
+    handleSocialInputChange('name', e.target.value);
+  }, [handleSocialInputChange]);
+
+  const handleSocialHrefChange = useCallback((e) => {
+    handleSocialInputChange('href', e.target.value);
+  }, [handleSocialInputChange]);
+
+  const handleSocialIconChange = useCallback((e) => {
+    handleSocialInputChange('icon', e.target.value);
+  }, [handleSocialInputChange]);
+
+  const handleSocialColorChange = useCallback((e) => {
+    handleSocialInputChange('color', e.target.value);
+  }, [handleSocialInputChange]);
+
+  const handleSocialDescriptionChange = useCallback((e) => {
+    handleSocialInputChange('description', e.target.value);
+  }, [handleSocialInputChange]);
+
   const handleContactSave = useCallback(() => {
     if (!contactFormData.label.trim() || !contactFormData.value.trim()) {
       alert('Please fill in all required fields');
@@ -303,7 +345,7 @@ const ContactManager = ({ onSave }) => {
             </label>
             <select
               value={contactFormData.icon}
-              onChange={(e) => handleContactInputChange('icon', e.target.value)}
+              onChange={handleContactIconChange}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
               {iconOptions.map(option => (
@@ -321,7 +363,7 @@ const ContactManager = ({ onSave }) => {
             <input
               type="text"
               value={contactFormData.label}
-              onChange={(e) => handleContactInputChange('label', e.target.value)}
+              onChange={handleContactLabelChange}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="e.g., Email, Phone"
             />
@@ -334,7 +376,7 @@ const ContactManager = ({ onSave }) => {
             <input
               type="text"
               value={contactFormData.value}
-              onChange={(e) => handleContactInputChange('value', e.target.value)}
+              onChange={handleContactValueChange}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="e.g., your@email.com, +1 (555) 123-4567"
             />
@@ -347,7 +389,7 @@ const ContactManager = ({ onSave }) => {
             <input
               type="text"
               value={contactFormData.href}
-              onChange={(e) => handleContactInputChange('href', e.target.value)}
+              onChange={handleContactHrefChange}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="e.g., mailto:your@email.com, tel:+1555123456"
             />
@@ -360,7 +402,7 @@ const ContactManager = ({ onSave }) => {
             <input
               type="text"
               value={contactFormData.description}
-              onChange={(e) => handleContactInputChange('description', e.target.value)}
+              onChange={handleContactDescriptionChange}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="e.g., Best for project inquiries"
             />
@@ -384,7 +426,7 @@ const ContactManager = ({ onSave }) => {
         </div>
       </div>
     </Card>
-  ), [contactFormData, editingContact, handleContactInputChange, handleContactSave, setEditingContact, setIsCreatingContact]);
+  ), [editingContact, handleContactIconChange, handleContactLabelChange, handleContactValueChange, handleContactHrefChange, handleContactDescriptionChange, handleContactSave]);
 
   const SocialForm = useCallback(() => (
     <Card className="mb-6">
@@ -413,7 +455,7 @@ const ContactManager = ({ onSave }) => {
             <input
               type="text"
               value={socialFormData.name}
-              onChange={(e) => handleSocialInputChange('name', e.target.value)}
+              onChange={handleSocialNameChange}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="e.g., GitHub, LinkedIn"
             />
@@ -426,7 +468,7 @@ const ContactManager = ({ onSave }) => {
             <input
               type="url"
               value={socialFormData.href}
-              onChange={(e) => handleSocialInputChange('href', e.target.value)}
+              onChange={handleSocialHrefChange}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="https://github.com/username"
             />
@@ -438,7 +480,7 @@ const ContactManager = ({ onSave }) => {
             </label>
             <select
               value={socialFormData.icon}
-              onChange={(e) => handleSocialInputChange('icon', e.target.value)}
+              onChange={handleSocialIconChange}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
               {socialIconOptions.map(option => (
@@ -455,7 +497,7 @@ const ContactManager = ({ onSave }) => {
             </label>
             <select
               value={socialFormData.color}
-              onChange={(e) => handleSocialInputChange('color', e.target.value)}
+              onChange={handleSocialColorChange}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
               {colorOptions.map(option => (
@@ -473,7 +515,7 @@ const ContactManager = ({ onSave }) => {
             <input
               type="text"
               value={socialFormData.description}
-              onChange={(e) => handleSocialInputChange('description', e.target.value)}
+              onChange={handleSocialDescriptionChange}
               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               placeholder="e.g., Check out my code"
             />
@@ -497,7 +539,7 @@ const ContactManager = ({ onSave }) => {
         </div>
       </div>
     </Card>
-  ), [socialFormData, editingSocial, handleSocialInputChange, handleSocialSave, setEditingSocial, setIsCreatingSocial]);
+  ), [editingSocial, handleSocialNameChange, handleSocialHrefChange, handleSocialIconChange, handleSocialColorChange, handleSocialDescriptionChange, handleSocialSave]);
 
   return (
     <div className="max-w-7xl mx-auto p-6">
