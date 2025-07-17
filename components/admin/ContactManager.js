@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Plus, Edit, Trash2, Save, X, Mail, Phone, MapPin, MessageCircle,
   Github, Linkedin, Twitter, Instagram, Youtube, Globe, Upload, Copy
@@ -183,21 +183,21 @@ const ContactManager = ({ onSave }) => {
     }
   }, [editingSocial]);
 
-  const handleContactInputChange = (field, value) => {
+  const handleContactInputChange = useCallback((field, value) => {
     setContactFormData(prev => ({
       ...prev,
       [field]: value
     }));
-  };
+  }, []);
 
-  const handleSocialInputChange = (field, value) => {
+  const handleSocialInputChange = useCallback((field, value) => {
     setSocialFormData(prev => ({
       ...prev,
       [field]: value
     }));
-  };
+  }, []);
 
-  const handleContactSave = () => {
+  const handleContactSave = useCallback(() => {
     if (!contactFormData.label.trim() || !contactFormData.value.trim()) {
       alert('Please fill in all required fields');
       return;
@@ -217,9 +217,9 @@ const ContactManager = ({ onSave }) => {
 
     setEditingContact(null);
     setIsCreatingContact(false);
-  };
+  }, [contactFormData, editingContact]);
 
-  const handleSocialSave = () => {
+  const handleSocialSave = useCallback(() => {
     if (!socialFormData.name.trim() || !socialFormData.href.trim()) {
       alert('Please fill in all required fields');
       return;
@@ -238,30 +238,30 @@ const ContactManager = ({ onSave }) => {
 
     setEditingSocial(null);
     setIsCreatingSocial(false);
-  };
+  }, [socialFormData, editingSocial]);
 
-  const handleContactDelete = (id) => {
+  const handleContactDelete = useCallback((id) => {
     if (window.confirm('Are you sure you want to delete this contact method?')) {
       setContactInfo(prev => prev.filter(c => c.id !== id));
     }
-  };
+  }, []);
 
-  const handleSocialDelete = (id) => {
+  const handleSocialDelete = useCallback((id) => {
     if (window.confirm('Are you sure you want to delete this social link?')) {
       setSocialLinks(prev => prev.filter(s => s.id !== id));
     }
-  };
+  }, []);
 
-  const generateContactCode = () => {
+  const generateContactCode = useCallback(() => {
     const contactCode = `const contactInfo = ${JSON.stringify(contactInfo, null, 2)};`;
     const socialCode = `const socialLinks = ${JSON.stringify(socialLinks, null, 2)};`;
     const fullCode = `${contactCode}\n\n${socialCode}`;
     
     navigator.clipboard.writeText(fullCode);
     alert('Contact data copied to clipboard! You can paste this into your ContactPage.js file.');
-  };
+  }, [contactInfo, socialLinks]);
 
-  const getIconComponent = (iconName) => {
+  const getIconComponent = useCallback((iconName) => {
     const icons = {
       Mail,
       Phone,
@@ -275,9 +275,9 @@ const ContactManager = ({ onSave }) => {
       Globe
     };
     return icons[iconName] || Mail;
-  };
+  }, []);
 
-  const ContactForm = () => (
+  const ContactForm = useCallback(() => (
     <Card className="mb-6">
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
@@ -384,9 +384,9 @@ const ContactManager = ({ onSave }) => {
         </div>
       </div>
     </Card>
-  );
+  ), [contactFormData, editingContact, handleContactInputChange, handleContactSave, setEditingContact, setIsCreatingContact]);
 
-  const SocialForm = () => (
+  const SocialForm = useCallback(() => (
     <Card className="mb-6">
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
@@ -497,7 +497,7 @@ const ContactManager = ({ onSave }) => {
         </div>
       </div>
     </Card>
-  );
+  ), [socialFormData, editingSocial, handleSocialInputChange, handleSocialSave, setEditingSocial, setIsCreatingSocial]);
 
   return (
     <div className="max-w-7xl mx-auto p-6">
