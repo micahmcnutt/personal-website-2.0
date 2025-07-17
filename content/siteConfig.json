@@ -20,16 +20,48 @@
     "UI/UX Designer"
   ],
   "stats": [
-    { "label": "Projects Completed", "value": "25+", "icon": "Code" },
-    { "label": "Happy Clients", "value": "15+", "icon": "Users" },
-    { "label": "Years Experience", "value": "3+", "icon": "Award" },
-    { "label": "Technologies", "value": "20+", "icon": "Zap" }
+    {
+      "label": "Projects Completed",
+      "value": "25+",
+      "icon": "Code"
+    },
+    {
+      "label": "Happy Clients",
+      "value": "15+",
+      "icon": "Users"
+    },
+    {
+      "label": "Years Experience",
+      "value": "3+",
+      "icon": "Award"
+    },
+    {
+      "label": "Technologies",
+      "value": "20+",
+      "icon": "Zap"
+    }
   ],
   "skills": [
-    { "name": "Frontend Development", "level": 90, "color": "bg-blue-500" },
-    { "name": "Backend Development", "level": 85, "color": "bg-green-500" },
-    { "name": "UI/UX Design", "level": 80, "color": "bg-purple-500" },
-    { "name": "DevOps & Cloud", "level": 75, "color": "bg-orange-500" }
+    {
+      "name": "Frontend Development",
+      "level": 90,
+      "color": "bg-blue-500"
+    },
+    {
+      "name": "Backend Development",
+      "level": 85,
+      "color": "bg-green-500"
+    },
+    {
+      "name": "UI/UX Design",
+      "level": 80,
+      "color": "bg-purple-500"
+    },
+    {
+      "name": "DevOps & Cloud",
+      "level": 75,
+      "color": "bg-orange-500"
+    }
   ],
   "social": {
     "github": {
@@ -100,11 +132,31 @@
     }
   },
   "projectCategories": [
-    { "id": "all", "name": "All Projects", "icon": "Code" },
-    { "id": "web", "name": "Web Apps", "icon": "Zap" },
-    { "id": "mobile", "name": "Mobile", "icon": "Calendar" },
-    { "id": "backend", "name": "Backend", "icon": "Code" },
-    { "id": "tools", "name": "Tools", "icon": "Star" }
+    {
+      "id": "all",
+      "name": "All Projects",
+      "icon": "Code"
+    },
+    {
+      "id": "web",
+      "name": "Web Apps",
+      "icon": "Zap"
+    },
+    {
+      "id": "mobile",
+      "name": "Mobile",
+      "icon": "Calendar"
+    },
+    {
+      "id": "backend",
+      "name": "Backend",
+      "icon": "Code"
+    },
+    {
+      "id": "tools",
+      "name": "Tools",
+      "icon": "Star"
+    }
   ],
   "contactForm": {
     "projectTypes": [
@@ -134,7 +186,13 @@
   "seo": {
     "title": "Micah McNutt - Full Stack Developer",
     "description": "Personal website and portfolio of Micah McNutt, a passionate full-stack developer specializing in modern web technologies.",
-    "keywords": ["full-stack developer", "web development", "React", "Node.js", "portfolio"],
+    "keywords": [
+      "full-stack developer",
+      "web development",
+      "React",
+      "Node.js",
+      "portfolio"
+    ],
     "author": "Micah McNutt",
     "url": "https://micahmcnutt.github.io/personal-website-2.0",
     "image": "/images/og-image.jpg"
@@ -152,5 +210,65 @@
       "contactForm": true,
       "adminPanel": true
     }
-  }
-} 
+  },
+  "contactInfo": [
+    {
+      "id": 1,
+      "icon": "Mail",
+      "label": "Email",
+      "value": "micah.mcnutt@example.com",
+      "href": "mailto:micah.mcnutt@example.com",
+      "description": "Best for project inquiries"
+    },
+    {
+      "id": 3,
+      "icon": "MapPin",
+      "label": "Location",
+      "value": "Austin, TX",
+      "href": null,
+      "description": "Central Time Zone"
+    }
+  ],
+  "socialLinks": [
+    {
+      "id": 1,
+      "name": "GitHub",
+      "href": "https://github.com/yourusername",
+      "icon": "Github",
+      "color": "hover:text-gray-900 dark:hover:text-white",
+      "description": "Check out my code"
+    },
+    {
+      "id": 2,
+      "name": "LinkedIn",
+      "href": "https://linkedin.com/in/yourprofile",
+      "icon": "Linkedin",
+      "color": "hover:text-blue-600",
+      "description": "Professional network"
+    },
+    {
+      "id": 3,
+      "name": "Twitter",
+      "href": "https://twitter.com/yourusername",
+      "icon": "Twitter",
+      "color": "hover:text-blue-400",
+      "description": "Latest updates"
+    },
+    {
+      "id": 4,
+      "name": "Instagram",
+      "href": "https://instagram.com/yourusername",
+      "icon": "Instagram",
+      "color": "hover:text-pink-600",
+      "description": "Behind the scenes"
+    },
+    {
+      "id": 5,
+      "name": "YouTube",
+      "href": "https://youtube.com/c/yourchannel",
+      "icon": "Youtube",
+      "color": "hover:text-red-600",
+      "description": "Tech tutorials"
+    }
+  ]
+}
