@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
-import { GitHubSync } from '../../utils/dataManager';
+import { getSiteConfig, saveSiteConfig, GitHubSync } from '../../utils/dataManager';
 
 // Extracted ContactForm component - isolated from parent re-renders
 const ContactForm = ({ 
@@ -232,91 +232,9 @@ const SocialForm = ({
 const ContactManager = ({ onSave }) => {
   const [syncStatus, setSyncStatus] = useState(null);
   const [isPublishing, setIsPublishing] = useState(false);
-  const [contactInfo, setContactInfo] = useState([
-    {
-      id: 1,
-      icon: 'Mail',
-      label: 'Email',
-      value: 'micah.mcnutt@example.com',
-      href: 'mailto:micah.mcnutt@example.com',
-      description: 'Best for project inquiries'
-    },
-    {
-      id: 2,
-      icon: 'Phone',
-      label: 'Phone',
-      value: '+1 (555) 123-4567',
-      href: 'tel:+15551234567',
-      description: 'Available 9 AM - 6 PM EST'
-    },
-    {
-      id: 3,
-      icon: 'MapPin',
-      label: 'Location',
-      value: 'Austin, TX',
-      href: null,
-      description: 'Central Time Zone'
-    },
-    {
-      id: 4,
-      icon: 'MessageCircle',
-      label: 'WhatsApp',
-      value: '+1 (555) 123-4567',
-      href: 'https://wa.me/15551234567',
-      description: 'Quick messages'
-    }
-  ]);
-
-  const [socialLinks, setSocialLinks] = useState([
-    {
-      id: 1,
-      name: 'GitHub',
-      href: 'https://github.com/yourusername',
-      icon: 'Github',
-      color: 'hover:text-gray-900 dark:hover:text-white',
-      description: 'Check out my code'
-    },
-    {
-      id: 2,
-      name: 'LinkedIn',
-      href: 'https://linkedin.com/in/yourprofile',
-      icon: 'Linkedin',
-      color: 'hover:text-blue-600',
-      description: 'Professional network'
-    },
-    {
-      id: 3,
-      name: 'Twitter',
-      href: 'https://twitter.com/yourusername',
-      icon: 'Twitter',
-      color: 'hover:text-blue-400',
-      description: 'Latest updates'
-    },
-    {
-      id: 4,
-      name: 'Instagram',
-      href: 'https://instagram.com/yourusername',
-      icon: 'Instagram',
-      color: 'hover:text-pink-600',
-      description: 'Behind the scenes'
-    },
-    {
-      id: 5,
-      name: 'YouTube',
-      href: 'https://youtube.com/c/yourchannel',
-      icon: 'Youtube',
-      color: 'hover:text-red-600',
-      description: 'Tech tutorials'
-    },
-    {
-      id: 6,
-      name: 'Portfolio',
-      href: 'https://micahmcnutt.dev',
-      icon: 'Globe',
-      color: 'hover:text-green-600',
-      description: 'View my work'
-    }
-  ]);
+  const [siteConfig, setSiteConfig] = useState(null);
+  const [contactInfo, setContactInfo] = useState([]);
+  const [socialLinks, setSocialLinks] = useState([]);
 
   const [editingContact, setEditingContact] = useState(null);
   const [editingSocial, setEditingSocial] = useState(null);
@@ -368,8 +286,194 @@ const ContactManager = ({ onSave }) => {
     { value: 'hover:text-yellow-600', label: 'Yellow' }
   ];
 
-  // Load sync status on component mount
+  // Convert siteConfig to ContactManager format
+  const convertSiteConfigToContactFormat = (config) => {
+    if (!config) return { contactInfo: [], socialLinks: [] };
+
+    // Build contactInfo from siteConfig.personal
+    const contactInfo = [];
+    if (config.personal?.email) {
+      contactInfo.push({
+        id: 1,
+        icon: 'Mail',
+        label: 'Email',
+        value: config.personal.email,
+        href: `mailto:${config.personal.email}`,
+        description: 'Best for project inquiries'
+      });
+    }
+    if (config.personal?.phone) {
+      contactInfo.push({
+        id: 2,
+        icon: 'Phone',
+        label: 'Phone',
+        value: config.personal.phone,
+        href: `tel:${config.personal.phone.replace(/\D/g, '')}`,
+        description: config.personal.availability || 'Available 9 AM - 6 PM EST'
+      });
+    }
+    if (config.personal?.location) {
+      contactInfo.push({
+        id: 3,
+        icon: 'MapPin',
+        label: 'Location',
+        value: config.personal.location,
+        href: null,
+        description: config.personal.timezone || 'Central Time Zone'
+      });
+    }
+    if (config.personal?.phone) {
+      contactInfo.push({
+        id: 4,
+        icon: 'MessageCircle',
+        label: 'WhatsApp',
+        value: config.personal.phone,
+        href: `https://wa.me/${config.personal.phone.replace(/\D/g, '')}`,
+        description: 'Quick messages'
+      });
+    }
+
+    // Build socialLinks from siteConfig.social
+    const socialLinks = [];
+    let socialId = 1;
+    
+    if (config.social?.github?.url) {
+      socialLinks.push({
+        id: socialId++,
+        name: 'GitHub',
+        href: config.social.github.url,
+        icon: 'Github',
+        color: 'hover:text-gray-900 dark:hover:text-white',
+        description: 'Check out my code'
+      });
+    }
+    if (config.social?.linkedin?.url) {
+      socialLinks.push({
+        id: socialId++,
+        name: 'LinkedIn',
+        href: config.social.linkedin.url,
+        icon: 'Linkedin',
+        color: 'hover:text-blue-600',
+        description: 'Professional network'
+      });
+    }
+    if (config.social?.twitter?.url) {
+      socialLinks.push({
+        id: socialId++,
+        name: 'Twitter',
+        href: config.social.twitter.url,
+        icon: 'Twitter',
+        color: 'hover:text-blue-400',
+        description: 'Latest updates'
+      });
+    }
+    if (config.social?.instagram?.url) {
+      socialLinks.push({
+        id: socialId++,
+        name: 'Instagram',
+        href: config.social.instagram.url,
+        icon: 'Instagram',
+        color: 'hover:text-pink-600',
+        description: 'Behind the scenes'
+      });
+    }
+    if (config.social?.youtube?.url) {
+      socialLinks.push({
+        id: socialId++,
+        name: 'YouTube',
+        href: config.social.youtube.url,
+        icon: 'Youtube',
+        color: 'hover:text-red-600',
+        description: 'Tech tutorials'
+      });
+    }
+    if (config.social?.website?.url) {
+      socialLinks.push({
+        id: socialId++,
+        name: 'Portfolio',
+        href: config.social.website.url,
+        icon: 'Globe',
+        color: 'hover:text-green-600',
+        description: 'View my work'
+      });
+    }
+
+    // Add custom contactInfo and socialLinks if they exist
+    if (config.contactInfo && Array.isArray(config.contactInfo)) {
+      config.contactInfo.forEach((contact) => {
+        if (!contactInfo.find(c => c.value === contact.value)) {
+          contactInfo.push({
+            ...contact,
+            id: contact.id || (contactInfo.length + 1)
+          });
+        }
+      });
+    }
+
+    if (config.socialLinks && Array.isArray(config.socialLinks)) {
+      config.socialLinks.forEach((social) => {
+        if (!socialLinks.find(s => s.href === social.href)) {
+          socialLinks.push({
+            ...social,
+            id: social.id || (socialLinks.length + 1)
+          });
+        }
+      });
+    }
+
+    return { contactInfo, socialLinks };
+  };
+
+  // Convert ContactManager format back to siteConfig
+  const updateSiteConfigFromContactData = (contactInfo, socialLinks) => {
+    if (!siteConfig) return;
+
+    const updatedConfig = { ...siteConfig };
+
+    // Ensure nested objects exist
+    if (!updatedConfig.personal) updatedConfig.personal = {};
+    if (!updatedConfig.social) updatedConfig.social = {};
+
+    // Update personal info from contactInfo
+    const emailContact = contactInfo.find(c => c.icon === 'Mail' || c.label.toLowerCase().includes('email'));
+    const phoneContact = contactInfo.find(c => c.icon === 'Phone' || c.label.toLowerCase().includes('phone'));
+    const locationContact = contactInfo.find(c => c.icon === 'MapPin' || c.label.toLowerCase().includes('location'));
+
+    if (emailContact) updatedConfig.personal.email = emailContact.value;
+    if (phoneContact) updatedConfig.personal.phone = phoneContact.value;
+    if (locationContact) updatedConfig.personal.location = locationContact.value;
+
+    // Update social links
+    socialLinks.forEach(social => {
+      const socialKey = social.name.toLowerCase();
+      if (!updatedConfig.social[socialKey]) updatedConfig.social[socialKey] = {};
+      updatedConfig.social[socialKey].url = social.href;
+    });
+
+    // Store custom contactInfo and socialLinks arrays
+    updatedConfig.contactInfo = contactInfo;
+    updatedConfig.socialLinks = socialLinks;
+
+    return updatedConfig;
+  };
+
+  const saveToDataManager = (newContactInfo, newSocialLinks) => {
+    const updatedConfig = updateSiteConfigFromContactData(newContactInfo, newSocialLinks);
+    if (updatedConfig) {
+      saveSiteConfig(updatedConfig);
+      setSiteConfig(updatedConfig);
+    }
+  };
+
+  // Load initial data and sync status on component mount
   useEffect(() => {
+    const config = getSiteConfig();
+    setSiteConfig(config);
+    
+    const { contactInfo, socialLinks } = convertSiteConfigToContactFormat(config);
+    setContactInfo(contactInfo);
+    setSocialLinks(socialLinks);
+    
     updateSyncStatus();
   }, []);
 
@@ -482,18 +586,22 @@ const ContactManager = ({ onSave }) => {
       href: contactFormData.href || null
     };
 
+    let updatedContactInfo;
     if (editingContact) {
-      setContactInfo(prev => prev.map(c => c.id === editingContact.id ? contactData : c));
+      updatedContactInfo = contactInfo.map(c => c.id === editingContact.id ? contactData : c);
     } else {
-      setContactInfo(prev => [...prev, contactData]);
+      updatedContactInfo = [...contactInfo, contactData];
     }
+
+    setContactInfo(updatedContactInfo);
+    saveToDataManager(updatedContactInfo, socialLinks);
 
     setEditingContact(null);
     setIsCreatingContact(false);
     
     // Update sync status since we made changes
     setTimeout(updateSyncStatus, 100);
-  }, [contactFormData, editingContact]);
+  }, [contactFormData, editingContact, contactInfo, socialLinks]);
 
   const handleSocialSave = useCallback(() => {
     if (!socialFormData.name.trim() || !socialFormData.href.trim()) {
@@ -506,32 +614,44 @@ const ContactManager = ({ onSave }) => {
       id: editingSocial ? editingSocial.id : Date.now()
     };
 
+    let updatedSocialLinks;
     if (editingSocial) {
-      setSocialLinks(prev => prev.map(s => s.id === editingSocial.id ? socialData : s));
+      updatedSocialLinks = socialLinks.map(s => s.id === editingSocial.id ? socialData : s);
     } else {
-      setSocialLinks(prev => [...prev, socialData]);
+      updatedSocialLinks = [...socialLinks, socialData];
     }
+
+    setSocialLinks(updatedSocialLinks);
+    saveToDataManager(contactInfo, updatedSocialLinks);
 
     setEditingSocial(null);
     setIsCreatingSocial(false);
     
     // Update sync status since we made changes
     setTimeout(updateSyncStatus, 100);
-  }, [socialFormData, editingSocial]);
+  }, [socialFormData, editingSocial, socialLinks, contactInfo]);
 
   const handleContactDelete = useCallback((id) => {
     if (window.confirm('Are you sure you want to delete this contact method?')) {
-      setContactInfo(prev => prev.filter(c => c.id !== id));
-    }
-  }, []);
-
-  const handleSocialDelete = useCallback((id) => {
-    if (window.confirm('Are you sure you want to delete this social link?')) {
-      setSocialLinks(prev => prev.filter(s => s.id !== id));
+      const updatedContactInfo = contactInfo.filter(c => c.id !== id);
+      setContactInfo(updatedContactInfo);
+      saveToDataManager(updatedContactInfo, socialLinks);
+      
       // Update sync status since we made changes
       setTimeout(updateSyncStatus, 100);
     }
-  }, []);
+  }, [contactInfo, socialLinks]);
+
+  const handleSocialDelete = useCallback((id) => {
+    if (window.confirm('Are you sure you want to delete this social link?')) {
+      const updatedSocialLinks = socialLinks.filter(s => s.id !== id);
+      setSocialLinks(updatedSocialLinks);
+      saveToDataManager(contactInfo, updatedSocialLinks);
+      
+      // Update sync status since we made changes
+      setTimeout(updateSyncStatus, 100);
+    }
+  }, [socialLinks, contactInfo]);
 
   const generateContactCode = useCallback(() => {
     const contactCode = `const contactInfo = ${JSON.stringify(contactInfo, null, 2)};`;

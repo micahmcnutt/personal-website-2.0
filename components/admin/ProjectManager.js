@@ -2,11 +2,10 @@ import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, Save, X, Star, Upload, Eye, ExternalLink, Github, AlertCircle, CheckCircle, RefreshCw, Zap } from 'lucide-react';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
-import { projects as initialProjects } from '../../data/projects';
-import { GitHubSync } from '../../utils/dataManager';
+import { getProjects, saveProjects, GitHubSync } from '../../utils/dataManager';
 
 const ProjectManager = ({ onSave }) => {
-  const [projects, setProjects] = useState(initialProjects);
+  const [projects, setProjects] = useState([]);
   const [editingProject, setEditingProject] = useState(null);
   const [isCreating, setIsCreating] = useState(false);
   const [syncStatus, setSyncStatus] = useState(null);
@@ -25,8 +24,10 @@ const ProjectManager = ({ onSave }) => {
 
   const categories = ['web', 'mobile', 'backend', 'tools'];
 
-  // Load sync status on component mount
+  // Load initial data and sync status on component mount
   useEffect(() => {
+    const initialProjects = getProjects();
+    setProjects(initialProjects);
     updateSyncStatus();
   }, []);
 
@@ -127,11 +128,17 @@ const ProjectManager = ({ onSave }) => {
       technologies: formData.technologies.filter(tech => tech.trim())
     };
 
+    let updatedProjects;
     if (editingProject) {
-      setProjects(prev => prev.map(p => p.id === editingProject.id ? projectData : p));
+      updatedProjects = projects.map(p => p.id === editingProject.id ? projectData : p);
     } else {
-      setProjects(prev => [...prev, projectData]);
+      updatedProjects = [...projects, projectData];
     }
+
+    setProjects(updatedProjects);
+    
+    // Save to localStorage via dataManager
+    saveProjects(updatedProjects);
 
     setEditingProject(null);
     setIsCreating(false);
@@ -141,22 +148,32 @@ const ProjectManager = ({ onSave }) => {
     
     // Call the onSave callback if provided
     if (onSave) {
-      onSave(projects);
+      onSave(updatedProjects);
     }
   };
 
   const handleDelete = (id) => {
     if (window.confirm('Are you sure you want to delete this project?')) {
-      setProjects(prev => prev.filter(p => p.id !== id));
+      const updatedProjects = projects.filter(p => p.id !== id);
+      setProjects(updatedProjects);
+      
+      // Save to localStorage via dataManager
+      saveProjects(updatedProjects);
+      
       // Update sync status since we made changes
       setTimeout(updateSyncStatus, 100);
     }
   };
 
   const toggleFeatured = (id) => {
-    setProjects(prev => prev.map(p => 
+    const updatedProjects = projects.map(p => 
       p.id === id ? { ...p, featured: !p.featured } : p
-    ));
+    );
+    setProjects(updatedProjects);
+    
+    // Save to localStorage via dataManager
+    saveProjects(updatedProjects);
+    
     // Update sync status since we made changes
     setTimeout(updateSyncStatus, 100);
   };
