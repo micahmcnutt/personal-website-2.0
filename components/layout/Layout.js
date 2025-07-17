@@ -27,8 +27,7 @@ const Layout = ({ children, title = 'Micah McNutt - Personal Website', descripti
         <meta name="twitter:title" content={title} />
         <meta name="twitter:description" content={description} />
         
-        {/* Preload important resources */}
-        <link rel="preload" href="/fonts/inter.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        {/* Font preloading removed - no custom fonts currently */}
       </Head>
       
       <div className="min-h-screen bg-secondary flex flex-col theme-transition">
