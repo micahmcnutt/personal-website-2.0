@@ -7,9 +7,9 @@
     "closing": "My approach combines technical expertise with creative problem-solving to deliver solutions that exceed expectations.",
     "profileImage": "/images/profile.jpg",
     "resumeUrl": "/resume.pdf",
-    "location": "Austin, TX",
+    "location": "Wilmington, DE",
     "timezone": "Central Time Zone",
-    "email": "micah.mcnutt@example.com",
+    "email": "micahmcnutt@gmail.com",
     "phone": "+1 (555) 123-4567",
     "availability": "Available 9 AM - 6 PM EST"
   },
@@ -213,20 +213,20 @@
   },
   "contactInfo": [
     {
-      "id": 1,
       "icon": "Mail",
       "label": "Email",
-      "value": "micah.mcnutt@example.com",
-      "href": "mailto:micah.mcnutt@example.com",
-      "description": "Best for project inquiries"
+      "value": "micahmcnutt@gmail.com",
+      "href": null,
+      "description": "Best for project inquiries",
+      "id": 1
     },
     {
-      "id": 3,
       "icon": "MapPin",
       "label": "Location",
-      "value": "Austin, TX",
+      "value": "Wilmington, DE",
       "href": null,
-      "description": "Central Time Zone"
+      "description": "Eastern Standard Time",
+      "id": 3
     }
   ],
   "socialLinks": [
